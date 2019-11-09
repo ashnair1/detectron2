@@ -21,7 +21,7 @@ RUN pip install torch torchvision cython \
 RUN pip install 'git+https://github.com/cocodataset/cocoapi.git#subdirectory=PythonAPI'
 
 # install detectron2
-RUN git clone https://github.com/facebookresearch/detectron2 /detectron2_repo
+RUN git clone https://github.com/ashnair1/detectron2 /detectron2_repo
 ENV FORCE_CUDA="1"
 ENV TORCH_CUDA_ARCH_LIST="Kepler;Kepler+Tesla;Maxwell;Maxwell+Tegra;Pascal;Volta;Turing"
 RUN pip install -e /detectron2_repo

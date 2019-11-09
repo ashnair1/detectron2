@@ -37,4 +37,5 @@ dist/
 
 # project dirs
 /datasets
+/projects/SiameseMaskRCNN/data/
 /models
