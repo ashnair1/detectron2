@@ -18,7 +18,8 @@ def get_xview2_dicts(data_dir, split):
         img_name = '_'.join(['post' if i == 'pre' else i for i in a['file_name'].split('_')])
         img_name = os.path.basename(img_name)
         a['post_file_name'] = os.path.join(data_dir, 'images', split + '_post', img_name)
-
+        a['pre_file_name'] = a['file_name']
+        del(a['file_name'])
     return ann
 
 
