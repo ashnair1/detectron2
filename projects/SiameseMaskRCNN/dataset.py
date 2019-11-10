@@ -14,6 +14,11 @@ def get_xview2_dicts(data_dir, split):
     ann = load_coco_json(ann_path,
                          img_dir,
                          dataset_name='xView2_' + split)
+    for a in ann:
+        img_name = '_'.join(['post' if i == 'pre' else i for i in a['file_name'].split('_')])
+        img_name = os.path.basename(img_name)
+        a['post_file_name'] = os.path.join(data_dir, 'images', split + '_post', img_name)
+
     return ann
 
 
@@ -35,7 +40,7 @@ if __name__ == "__main__":
     dataset_dicts = DatasetCatalog.get("xView2_train")
 
     for d in random.sample(dataset_dicts, 3):
-        img = cv2.imread(d["file_name"])
+        img = cv2.imread(d["post_file_name"])
         visualizer = Visualizer(img[:, :, ::-1], metadata=xview2_metadata, scale=0.5)
         vis = visualizer.draw_dataset_dict(d)
         import matplotlib.pyplot as plt
