@@ -10,8 +10,9 @@ from detectron2.data import build_detection_test_loader, build_detection_train_l
 from detectron2.utils.visualizer import Visualizer
 from dataset_mapper import SiameseDataMapper
 
+
 def get_xview2_dicts(data_dir, split):
-    ann_path = os.path.join(data_dir, 'annotations', split +'.json')
+    ann_path = os.path.join(data_dir, 'annotations', split + '.json')
     img_dir = os.path.join(data_dir, 'images', split)
     ann = load_coco_json(ann_path,
                          img_dir,
@@ -51,8 +52,8 @@ if __name__ == "__main__":
     #     #cv2.imshow('', vis.get_image()[:, :, ::-1])
 
     # Test Data Loader
-    cfg = get_cfg()
-    # add_tridentnet_config(cfg)
-    cfg.merge_from_file('/media/ashwin/DATA/detectron2/projects/SiameseMaskRCNN/configs/Base-SiameseMaskRCNN-Fast-C4.yaml')
-    cfg.freeze()
-    tdl = build_detection_test_loader(cfg, "xView2_val", mapper=SiameseDataMapper(cfg, False))
+    # cfg = get_cfg()
+    # # add_tridentnet_config(cfg)
+    # cfg.merge_from_file('/media/ashwin/DATA/detectron2/projects/SiameseMaskRCNN/configs/Base-SiameseMaskRCNN-Fast-C4.yaml')
+    # cfg.freeze()
+    # tdl = build_detection_test_loader(cfg, "xView2_val", mapper=SiameseDataMapper(cfg, False))
