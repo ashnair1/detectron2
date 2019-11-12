@@ -7,6 +7,8 @@ DATASETS:
   TRAIN: ("xView2_train",)
   TEST: ("xView2_val",)
 OUTPUT_DIR: "/media/ashwin/DATA/detectron/projects/SiameseMaskRCNN/"
+SOLVER:
+  CHECKPOINT_PERIOD: 1000
 TEST:
   EVAL_PERIOD: 1000
   DETECTIONS_PER_IMAGE: 200
