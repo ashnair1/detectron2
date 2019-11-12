@@ -12,3 +12,10 @@ python projects/SiameseMaskRCNN/train_net.py \
 python tools/train_net.py --num-gpus 8 \
 	--config-file projects/SiameseMaskRCNN/configs/Base-SiameseMaskRCNN-Fast-C4.yaml
 ```
+
+### Evaluate
+```bash
+python projects/SiameseMaskRCNN/train_net.py \
+        --eval-only \
+        --config-file projects/SiameseMaskRCNN/configs/Base-SiameseMaskRCNN-Fast-C4.yaml SOLVER.IMS_PER_BATCH 2 SOLVER.BASE_LR 0.0025
+```

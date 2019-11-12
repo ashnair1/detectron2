@@ -35,7 +35,8 @@ if __name__ == "__main__":
             MetadataCatalog.get("xView2_" + d).set(thing_classes=["no-damage",
                                                                   "minor-damage",
                                                                   "major-damage",
-                                                                  "destroyed"])
+                                                                  "destroyed"],
+                                                   json_file=os.path.join(data_dir, 'annotations', d + ".json"))
 
 
     # Visualise
