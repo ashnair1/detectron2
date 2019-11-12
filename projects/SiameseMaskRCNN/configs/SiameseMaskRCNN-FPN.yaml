@@ -1,0 +1,12 @@
+_BASE_: "Base-SiameseRCNN-FPN.yaml"
+MODEL:
+  MASK_ON: True
+  RESNETS:
+    DEPTH: 50
+DATASETS:
+  TRAIN: ("xView2_train",)
+  TEST: ("xView2_val",)
+OUTPUT_DIR: "/media/ashwin/DATA/detectron/projects/SiameseMaskRCNN/"
+TEST:
+  EVAL_PERIOD: 1000
+  DETECTIONS_PER_IMAGE: 200

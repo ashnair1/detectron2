@@ -193,7 +193,7 @@ class DefaultTrainer(SimpleTrainer):
     may easily become invalid in a new research. In fact, any assumptions beyond those made in the
     :class:`SimpleTrainer` are too much for research.
 
-    The code of this class has been annotated about restrictive assumptions it mades.
+    The code of this class has been annotated about restrictive assumptions it makes.
     When they do not work for you, you're encouraged to:
 
     1. Overwrite methods of this class, OR:
