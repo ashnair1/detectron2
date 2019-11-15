@@ -6,7 +6,7 @@ MODEL:
 DATASETS:
   TRAIN: ("xView2_train",)
   TEST: ("xView2_val",)
-OUTPUT_DIR: "/media/ashwin/DATA/detectron/projects/SiameseMaskRCNN/"
+OUTPUT_DIR: "/media/ashwin/DATA/detectron2/projects/SiameseMaskRCNN/"
 SOLVER:
   CHECKPOINT_PERIOD: 1000
 TEST:
