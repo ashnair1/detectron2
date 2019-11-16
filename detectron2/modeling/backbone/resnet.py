@@ -21,6 +21,7 @@ __all__ = [
     "ResNetBlockBase",
     "BottleneckBlock",
     "DeformBottleneckBlock",
+    "LightBottleneckBlock",
     "BasicStem",
     "ResNet",
     "make_stage",
@@ -269,6 +270,79 @@ class DeformBottleneckBlock(ResNetBlockBase):
         return out
 
 
+class LightBottleneckBlock(ResNetBlockBase):
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        *,
+        bottleneck_channels,
+        stride=1,
+        num_groups=1,
+        norm="BN",
+        dilation=1,
+    ):
+        """
+        Args:
+            norm (str or callable): a callable that takes the number of
+                channels and return a `nn.Module`, or a pre-defined string
+                (one of {"FrozenBN", "BN", "GN"}).
+        """
+        super().__init__(in_channels, out_channels, stride)
+
+        if in_channels != out_channels:
+            self.shortcut = Conv2d(
+                in_channels,
+                out_channels,
+                kernel_size=1,
+                stride=stride,
+                bias=False,
+                norm=get_norm(norm, out_channels),
+            )
+        else:
+            self.shortcut = None
+
+        self.conv1 = Conv2d(
+            in_channels,
+            bottleneck_channels,
+            kernel_size=3,
+            stride=stride,
+            padding=1 * dilation,
+            bias=False,
+            groups=num_groups,
+            dilation=dilation,
+            norm=get_norm(norm, bottleneck_channels),
+        )
+
+        self.conv2 = Conv2d(
+            bottleneck_channels,
+            out_channels,
+            kernel_size=3,
+            padding=1 * dilation,
+            bias=False,
+            norm=get_norm(norm, out_channels),
+        )
+
+        for layer in [self.conv1, self.conv2, self.shortcut]:
+            if layer is not None:  # shortcut can be None
+                weight_init.c2_msra_fill(layer)
+
+    def forward(self, x):
+        out = self.conv1(x)
+        out = F.relu_(out)
+
+        out = self.conv2(out)
+
+        if self.shortcut is not None:
+            shortcut = self.shortcut(x)
+        else:
+            shortcut = x
+
+        out += shortcut
+        out = F.relu_(out)
+        return out
+
+
 def make_stage(block_class, num_blocks, first_stride, **kwargs):
     """
     Create a resnet stage by creating many blocks.
@@ -439,7 +513,11 @@ def build_resnet_backbone(cfg, input_shape):
     # fmt: on
     assert res5_dilation in {1, 2}, "res5_dilation cannot be {}.".format(res5_dilation)
 
-    num_blocks_per_stage = {50: [3, 4, 6, 3], 101: [3, 4, 23, 3], 152: [3, 8, 36, 3]}[depth]
+    num_blocks_per_stage = {18: [2, 2, 2, 2],
+                            34: [3, 4, 6, 3],
+                            50: [3, 4, 6, 3],
+                            101: [3, 4, 23, 3],
+                            152: [3, 8, 36, 3]}[depth]
 
     stages = []
 
@@ -458,15 +536,21 @@ def build_resnet_backbone(cfg, input_shape):
             "out_channels": out_channels,
             "num_groups": num_groups,
             "norm": norm,
-            "stride_in_1x1": stride_in_1x1,
             "dilation": dilation,
         }
+
+        if depth not in [18, 34]:
+            stage_kargs["stride_in_1x1"] = stride_in_1x1
+
         if deform_on_per_stage[idx]:
             stage_kargs["block_class"] = DeformBottleneckBlock
             stage_kargs["deform_modulated"] = deform_modulated
             stage_kargs["deform_num_groups"] = deform_num_groups
         else:
-            stage_kargs["block_class"] = BottleneckBlock
+            if depth in [18, 34]:
+                stage_kargs["block_class"] = LightBottleneckBlock
+            else:
+                stage_kargs["block_class"] = BottleneckBlock
         blocks = make_stage(**stage_kargs)
         in_channels = out_channels
         out_channels *= 2
