@@ -88,7 +88,7 @@ Category ids in annotations are not in [1, #categories]! We'll apply a mapping f
         meta.thing_dataset_id_to_contiguous_id = id_map
 
     # sort indices for reproducible results
-    img_ids = sorted(list(coco_api.imgs.keys()))
+    img_ids = sorted(coco_api.imgs.keys())
     # imgs is a list of dicts, each looks something like:
     # {'license': 4,
     #  'url': 'http://farm6.staticflickr.com/5454/9413846304_881d5e5c3b_z.jpg',
@@ -185,7 +185,7 @@ Category ids in annotations are not in [1, #categories]! We'll apply a mapping f
         dataset_dicts.append(record)
 
     if num_instances_without_valid_segmentation > 0:
-        logger.warn(
+        logger.warning(
             "Filtered out {} instances without valid segmentation. "
             "There might be issues in your dataset generation process.".format(
                 num_instances_without_valid_segmentation
@@ -400,7 +400,7 @@ def convert_to_coco_json(dataset_name, output_file, allow_cached=True):
 
     PathManager.mkdirs(os.path.dirname(output_file))
     with file_lock(output_file):
-        if os.path.exists(output_file) and allow_cached:
+        if PathManager.exists(output_file) and allow_cached:
             logger.info(f"Cached annotations in COCO format already exist: {output_file}")
         else:
             logger.info(f"Converting dataset annotations in '{dataset_name}' to COCO format ...)")

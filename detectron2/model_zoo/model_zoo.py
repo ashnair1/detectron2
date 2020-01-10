@@ -1,15 +1,14 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 import os
+import pkg_resources
 import torch
 
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.config import get_cfg
 from detectron2.modeling import build_model
 
-import pkg_resources
 
-
-class ModelZooUrls(object):
+class _ModelZooUrls(object):
     """
     Mapping from names to officially released Detectron2 pre-trained models.
     """
@@ -65,6 +64,8 @@ class ModelZooUrls(object):
         "Cityscapes/mask_rcnn_R_50_FPN.yaml": "142423278/model_final_af9cf5.pkl",
         "PascalVOC-Detection/faster_rcnn_R_50_C4.yaml": "142202221/model_final_b1acc2.pkl",
         # Other Settings
+        "Misc/mask_rcnn_R_50_FPN_1x_dconv_c3-c5.yaml": "138602867/model_final_65c703.pkl",
+        "Misc/mask_rcnn_R_50_FPN_3x_dconv_c3-c5.yaml": "144998336/model_final_821d0b.pkl",
         "Misc/cascade_mask_rcnn_R_50_FPN_1x.yaml": "138602847/model_final_e9d89b.pkl",
         "Misc/cascade_mask_rcnn_R_50_FPN_3x.yaml": "144998488/model_final_480dd8.pkl",
         "Misc/mask_rcnn_R_50_FPN_3x_syncbn.yaml": "143915318/model_final_220cfb.pkl",
@@ -74,12 +75,23 @@ class ModelZooUrls(object):
         "Misc/cascade_mask_rcnn_X_152_32x8d_FPN_IN5k_gn_dconv.yaml": "18131413/model_0039999_e76410.pkl",  # noqa
     }
 
-    @classmethod
-    def get(cls, config_path):
-        if config_path in cls.CONFIG_PATH_TO_URL_SUFFIX:
-            name = config_path.replace(".yaml", "")
-            return cls.S3_PREFIX + name + "/" + cls.CONFIG_PATH_TO_URL_SUFFIX[config_path]
-        raise RuntimeError("{} not available in Model Zoo!".format(name))
+
+def get_checkpoint_url(config_path):
+    """
+    Returns the URL to the model trained using the given config
+
+    Args:
+        config_path (str): config file name relative to detectron2's "configs/"
+            directory, e.g., "COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_1x.yaml"
+
+    Returns:
+        str: a URL to the model
+    """
+    name = config_path.replace(".yaml", "")
+    if config_path in _ModelZooUrls.CONFIG_PATH_TO_URL_SUFFIX:
+        suffix = _ModelZooUrls.CONFIG_PATH_TO_URL_SUFFIX[config_path]
+        return _ModelZooUrls.S3_PREFIX + name + "/" + suffix
+    raise RuntimeError("{} not available in Model Zoo!".format(name))
 
 
 def get_config_file(config_path):
@@ -125,7 +137,7 @@ def get(config_path, trained: bool = False):
     cfg = get_cfg()
     cfg.merge_from_file(cfg_file)
     if trained:
-        cfg.MODEL.WEIGHTS = ModelZooUrls.get(config_path)
+        cfg.MODEL.WEIGHTS = get_checkpoint_url(config_path)
     if not torch.cuda.is_available():
         cfg.MODEL.DEVICE = "cpu"
 

@@ -12,7 +12,6 @@ also installs detectron2 with a few simple commands.
 - [torchvision](https://github.com/pytorch/vision/) that matches the PyTorch installation.
 	You can install them together at [pytorch.org](https://pytorch.org) to make sure of this.
 - OpenCV, needed by demo and visualization
-- [fvcore](https://github.com/facebookresearch/fvcore/): `pip install -U 'git+https://github.com/facebookresearch/fvcore'`
 - pycocotools: `pip install cython; pip install 'git+https://github.com/cocodataset/cocoapi.git#subdirectory=PythonAPI'`
 - GCC ≥ 4.9
 
@@ -24,14 +23,14 @@ After having the above dependencies, run:
 git clone https://github.com/facebookresearch/detectron2.git
 cd detectron2
 pip install -e .
+# (add --user if you don't have permission)
 
 # or if you are on macOS
 # MACOSX_DEPLOYMENT_TARGET=10.9 CC=clang CXX=clang++ pip install -e .
-
-# or, as an alternative to `pip install`, use
-# python setup.py build develop
 ```
-Note: you often need to rebuild detectron2 after reinstalling PyTorch.
+
+To __rebuild__ detectron2, `rm -rf build/ **/*.so` then `pip install -e .`.
+You often need to rebuild detectron2 after reinstalling PyTorch.
 
 ### Common Installation Issues
 
@@ -39,7 +38,7 @@ Click each issue for its solutions:
 
 <details>
 <summary>
-Undefined torch/aten symbols, or segmentation fault immediately when running the library.
+Undefined torch/aten/caffe2 symbols, or segmentation fault immediately when running the library.
 </summary>
 
 This can happen if detectron2 or torchvision is not
@@ -61,7 +60,7 @@ Undefined C++ symbols in `detectron2/_C*.so`.
 Usually it's because the library is compiled with a newer C++ compiler but run with an old C++ run time.
 This can happen with old anaconda.
 
-Try `conda update libgcc`. Then remove the files you built (`build/`, `**/*.so`) and rebuild them.
+Try `conda update libgcc`. Then rebuild detectron2.
 </details>
 
 <details>
@@ -70,9 +69,11 @@ Try `conda update libgcc`. Then remove the files you built (`build/`, `**/*.so`)
 </summary>
 CUDA is not found when building detectron2.
 You should make sure
+
 ```
 python -c 'import torch; from torch.utils.cpp_extension import CUDA_HOME; print(torch.cuda.is_available(), CUDA_HOME)'
 ```
+
 print valid outputs at the time you build detectron2.
 </details>
 
@@ -108,7 +109,7 @@ Two possibilities:
 
 <details>
 <summary>
-Undefined CUDA symbols.
+Undefined CUDA symbols or cannot open libcudart.so.
 </summary>
 
 The version of NVCC you use to build detectron2 or torchvision does

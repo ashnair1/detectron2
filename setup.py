@@ -27,7 +27,7 @@ def get_version():
         from datetime import datetime
 
         date_str = datetime.today().strftime("%y%m%d")
-        version = version + ".post" + date_str
+        version = version + ".dev" + date_str
 
         new_init_py = [l for l in init_py if not l.startswith("__version__")]
         new_init_py.append('__version__ = "{}"\n'.format(version))
@@ -124,15 +124,21 @@ setup(
     python_requires=">=3.6",
     install_requires=[
         "termcolor>=1.1",
-        "Pillow>=6.0",
+        "Pillow==6.2.2",  # torchvision currently does not work with Pillow 7
         "yacs>=0.1.6",
         "tabulate",
         "cloudpickle",
         "matplotlib",
         "tqdm>4.29.0",
         "tensorboard",
+        "fvcore",
+        "future",  # used by caffe2
+        "pydot",  # used to save caffe2 SVGs
     ],
-    extras_require={"all": ["shapely", "psutil"], "dev": ["flake8", "isort", "black==19.3b0"]},
+    extras_require={
+        "all": ["shapely", "psutil"],
+        "dev": ["flake8", "isort", "black==19.3b0", "flake8-bugbear", "flake8-comprehensions"],
+    },
     ext_modules=get_extensions(),
     cmdclass={"build_ext": torch.utils.cpp_extension.BuildExtension},
 )
