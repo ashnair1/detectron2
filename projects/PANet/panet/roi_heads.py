@@ -73,7 +73,7 @@ class PANetROIHeads(StandardROIHeads):
 
 
 @ROI_BOX_HEAD_REGISTRY.register()
-class FastRCNNConvFCHead_adpp(nn.Module):
+class FastRCNNConvFCHeadAdpp(nn.Module):
     """
     A head with several 3x3 conv layers (each followed by norm & relu) and
     several fc layers (each followed by relu).
@@ -167,7 +167,7 @@ def build_box_head(cfg, input_shape):
 
 
 @ROI_MASK_HEAD_REGISTRY.register()
-class MaskRCNNConvUpsampleHead_adpp(nn.Module):
+class MaskRCNNConvUpsampleHeadAdpp(nn.Module):
     """
     A mask head with several conv layers, plus an upsample layer (with `ConvTranspose2d`).
     """
@@ -179,7 +179,7 @@ class MaskRCNNConvUpsampleHead_adpp(nn.Module):
             conv_dim: the dimension of the conv layers
             norm: normalization for the conv layers
         """
-        super(MaskRCNNConvUpsampleHead_adpp, self).__init__()
+        super(MaskRCNNConvUpsampleHeadAdpp, self).__init__()
 
         # fmt: off
         num_classes       = cfg.MODEL.ROI_HEADS.NUM_CLASSES
@@ -210,6 +210,29 @@ class MaskRCNNConvUpsampleHead_adpp(nn.Module):
         num_levels = 4
         for i in range(num_levels - 1):
             self.conv_norm_relus.insert(1, self.conv_norm_relus[0])
+
+        # Fully connected fusion
+        self.conv_fc_norm_relus = []
+        if cfg.MODEL.ROI_MASK_HEAD.FCF:
+            num_conv_fc = cfg.MODEL.ROI_MASK_HEAD.NUM_CONV_FC
+            for k in range(num_conv_fc):
+                conv_fc = Conv2d(
+                    conv_dims,
+                    int(conv_dims/2) if k == num_conv_fc - 1 else conv_dims,
+                    kernel_size=3,
+                    stride=1,
+                    padding=1,
+                    bias=not self.norm,
+                    norm=get_norm(self.norm, conv_dims),
+                    activation=F.relu,
+                )
+                self.add_module("mask_fcn_fc{}".format(k + 1), conv_fc)
+                self.conv_fc_norm_relus.append(conv_fc)
+
+            self.mask_fc = nn.Sequential(
+                nn.Linear(int(conv_dims/2) * (cfg.MODEL.ROI_MASK_HEAD.POOLER_RESOLUTION ** 2),
+                          (2*cfg.MODEL.ROI_MASK_HEAD.POOLER_RESOLUTION) ** 2),
+                nn.ReLU(inplace=True))
 
         self.deconv = ConvTranspose2d(
             conv_dims if num_conv > 0 else input_channels,
@@ -242,10 +265,26 @@ class MaskRCNNConvUpsampleHead_adpp(nn.Module):
         for i in lvls:
             x = torch.max(x, i)
 
-        for layer in self.conv_norm_relus[4:]:
+        for num, layer in enumerate(self.conv_norm_relus[4:]):
             x = layer(x)
+            if num == len(self.conv_norm_relus[4:]) - 2:
+                xb = x
         x = F.relu(self.deconv(x))
-        return self.predictor(x)
+        x = self.predictor(x)
+
+        num_classes = x.shape[1]
+        pooler_resolution = int(x.shape[-1] / 2)
+
+        # Fully connected fusion branch
+        if self.conv_fc_norm_relus:
+            for layer in self.conv_fc_norm_relus:
+                xb = layer(xb)
+            xb = self.mask_fc(xb.view(xb.shape[0], -1))
+            xb = xb.view(xb.shape[0], 1, 2*pooler_resolution, 2*pooler_resolution)
+            xb = xb.repeat(1, num_classes, 1, 1)
+            x = xb + x
+
+        return x
 
 
 def build_mask_head(cfg, input_shape):

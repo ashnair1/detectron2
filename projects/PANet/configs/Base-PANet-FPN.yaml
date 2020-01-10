@@ -21,15 +21,17 @@ MODEL:
   MASK_ON: True
   ROI_HEADS:
     NAME: "PANetROIHeads"
+    NUM_CLASSES: 4
     IN_FEATURES: ["p2", "p3", "p4", "p5"]
   ROI_BOX_HEAD:
-    NAME: "FastRCNNConvFCHead_adpp"
+    NAME: "FastRCNNConvFCHeadAdpp"
     NUM_FC: 2
     POOLER_RESOLUTION: 7
   ROI_MASK_HEAD:
-    NAME: "MaskRCNNConvUpsampleHead_adpp"
+    NAME: "MaskRCNNConvUpsampleHeadAdpp"
     NUM_CONV: 4
-    POOLER_RESOLUTION: 14
+    POOLER_RESOLUTION: 28 # default 14
+    POOLER_SAMPLING_RATIO: 0 # default 0
 DATASETS:
   TRAIN: ("dummy_train",)
   #TEST: ("coco_2017_val",)
