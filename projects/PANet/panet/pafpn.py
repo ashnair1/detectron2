@@ -48,8 +48,9 @@ class PAFPN(Backbone):
         assert isinstance(bottom_up, Backbone)
 
         # Feature map strides and channels from the bottom up network (e.g. ResNet)
-        in_strides = [bottom_up.out_feature_strides[f] for f in in_features]
-        in_channels = [bottom_up.out_feature_channels[f] for f in in_features]
+        input_shapes = bottom_up.output_shape()
+        in_strides = [input_shapes[f].stride for f in in_features]
+        in_channels = [input_shapes[f].channels for f in in_features]
 
         _assert_strides_are_log2_contiguous(in_strides)
         lateral_convs = []
