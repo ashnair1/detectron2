@@ -69,9 +69,12 @@ class PAFPN(Backbone):
                 in_channels, out_channels, kernel_size=1, bias=use_bias, norm=lateral_norm
             )
             # Second lateral convolution in new bottom-up path
-            lateral_conv2 = Conv2d(
-                out_channels, out_channels, kernel_size=1, bias=use_bias, norm=lateral_norm
-            )
+            if idx != 0:
+                lateral_conv2 = Conv2d(
+                    out_channels, out_channels, kernel_size=1, bias=use_bias, norm=lateral_norm
+                )
+                weight_init.c2_xavier_fill(lateral_conv2)
+                lateral_convs2.append(lateral_conv2)
 
             # Output convs of fpn backbone
             midout_conv = Conv2d(
@@ -85,12 +88,19 @@ class PAFPN(Backbone):
             )
 
             # Convolutions for bottom-up path
-            conv_1 = Conv2d(
-                out_channels, out_channels, kernel_size=3, stride=2, padding=1, bias=use_bias, norm=lateral_norm
-            ).cuda()
-            conv_2 = Conv2d(
-                out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=use_bias, norm=lateral_norm
-            ).cuda()
+            if idx != 0:
+                conv_1 = Conv2d(
+                    out_channels, out_channels, kernel_size=3, stride=2, padding=1, bias=use_bias, norm=lateral_norm
+                ).cuda()
+                conv_2 = Conv2d(
+                    out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=use_bias, norm=lateral_norm
+                ).cuda()
+
+                weight_init.c2_xavier_fill(conv_1)
+                weight_init.c2_xavier_fill(conv_2)
+
+                convs1.append(conv_1)
+                convs2.append(conv_2)
 
             # Output convs of pafpn backbone
             output_conv = Conv2d(
@@ -103,31 +113,26 @@ class PAFPN(Backbone):
                 norm=output_norm,
             )
             weight_init.c2_xavier_fill(lateral_conv)
-            weight_init.c2_xavier_fill(lateral_conv2)
-            weight_init.c2_xavier_fill(conv_1)
-            weight_init.c2_xavier_fill(conv_2)
             weight_init.c2_xavier_fill(midout_conv)
             weight_init.c2_xavier_fill(output_conv)
             stage = int(math.log2(in_strides[idx]))
             self.add_module("fpn_lateral{}".format(stage), lateral_conv)
-            self.add_module("fpn_lateral2{}".format(stage), lateral_conv2)
+            if idx != 0:
+                self.add_module("fpn_lateral_bup{}".format(stage), lateral_conv2)
             self.add_module("fpn_mid_output{}".format(stage), midout_conv)
             self.add_module("fpn_output{}".format(stage), output_conv)
 
             lateral_convs.append(lateral_conv)
-            lateral_convs2.append(lateral_conv2)
-            convs1.append(conv_1)
-            convs2.append(conv_2)
             midout_convs.append(midout_conv)
             output_convs.append(output_conv)
         # Place convs into top-down order (from low to high resolution)
         # to make the top-down computation in forward clearer.
         self.lateral_convs = lateral_convs[::-1]
+        self.midout_convs = midout_convs[::-1]
         self.lateral_convs2 = lateral_convs2
         self.convs1 = convs1
         self.convs2 = convs2
-        self.midout_convs = midout_convs[::-1]
-        self.output_convs = output_convs[::-1]
+        self.output_convs = output_convs
         self.top_block = top_block
         self.in_features = in_features
         self.bottom_up = bottom_up
@@ -167,9 +172,9 @@ class PAFPN(Backbone):
         prev_cache = []
         results = []
         prev_features = self.lateral_convs[0](x[0])
-        prev_cache.append(self.output_convs[0](prev_features))
+        prev_cache.append(self.midout_convs[0](prev_features))
         for features, lateral_conv, midout_conv in zip(
-                x[1:], self.lateral_convs[1:], self.midout_convs
+                x[1:], self.lateral_convs[1:], self.midout_convs[1:]
         ):
             top_down_features = F.interpolate(prev_features, scale_factor=2, mode="nearest")
             lateral_features = lateral_conv(features)
@@ -180,8 +185,6 @@ class PAFPN(Backbone):
 
         # Reverse feature maps & convs into bottom-up order (from high to low resolution)
         prev_cache = prev_cache[::-1]
-        # pa_lateral_convs = self.lateral_convs[::-1]
-        self.output_convs = self.output_convs[::-1]
 
         # N2 (prev_tu_features) is P2 (prev_cache[0]) w/o any processing
         prev_tu_features = prev_cache[0]  # pa_lateral_convs[0](prev_cache[0])
@@ -189,8 +192,8 @@ class PAFPN(Backbone):
 
         # Path aggregation - add second bottom up branch
         for features, lateral_conv, output_conv, c1, c2 in zip(
-                prev_cache[1:], self.lateral_convs2[1:], self.output_convs[1:],
-                self.convs1[1:], self.convs2[1:]
+                prev_cache[1:], self.lateral_convs2[0:], self.output_convs[1:],
+                self.convs1[0:], self.convs2[0:]
         ):
 
             # bottom_up_features2 = F.interpolate(prev_tu_features, scale_factor=0.5, mode="nearest")
