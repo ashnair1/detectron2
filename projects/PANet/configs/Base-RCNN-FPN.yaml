@@ -1,11 +1,9 @@
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
   BACKBONE:
-    NAME: "build_resnet_pafpn_backbone"
-  WEIGHTS: "detectron2://ImageNetPretrained/MSRA/R-50.pkl"
+    NAME: "build_resnet_fpn_backbone"
   RESNETS:
     OUT_FEATURES: ["res2", "res3", "res4", "res5"]
-    DEPTH: 50
   FPN:
     IN_FEATURES: ["res2", "res3", "res4", "res5"]
   ANCHOR_GENERATOR:
@@ -20,19 +18,17 @@ MODEL:
     # which is approximately 1000 proposals per-image since the default batch size for FPN is 2.
     POST_NMS_TOPK_TRAIN: 1000
     POST_NMS_TOPK_TEST: 1000
-  MASK_ON: True
   ROI_HEADS:
-    NAME: "PANetROIHeads"
+    NAME: "StandardROIHeads"
     IN_FEATURES: ["p2", "p3", "p4", "p5"]
   ROI_BOX_HEAD:
-    NAME: "FastRCNNConvFCHeadAdpp"
+    NAME: "FastRCNNConvFCHead"
     NUM_FC: 2
     POOLER_RESOLUTION: 7
   ROI_MASK_HEAD:
-    NAME: "MaskRCNNConvUpsampleHeadAdpp"
+    NAME: "MaskRCNNConvUpsampleHead"
     NUM_CONV: 4
-    POOLER_RESOLUTION: 28 # default 14
-    POOLER_SAMPLING_RATIO: 0 # default 0
+    POOLER_RESOLUTION: 14
 DATASETS:
   TRAIN: ("coco_2017_train",)
   TEST: ("coco_2017_val",)
