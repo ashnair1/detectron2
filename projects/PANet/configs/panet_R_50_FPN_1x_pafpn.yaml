@@ -1,0 +1,11 @@
+_BASE_: "Base-RCNN-FPN.yaml"
+MODEL:
+  BACKBONE:
+    NAME: "build_resnet_pafpn_backbone"
+  WEIGHTS: "detectron2://ImageNetPretrained/MSRA/R-50.pkl"
+  MASK_ON: True
+  RESNETS:
+    DEPTH: 50
+  ROI_MASK_HEAD:
+    FCF:
+      ENABLED: False

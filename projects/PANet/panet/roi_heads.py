@@ -213,8 +213,8 @@ class MaskRCNNConvUpsampleHeadAdpp(nn.Module):
 
         # Fully connected fusion
         self.conv_fc_norm_relus = []
-        if cfg.MODEL.ROI_MASK_HEAD.FCF:
-            num_conv_fc = cfg.MODEL.ROI_MASK_HEAD.NUM_CONV_FC
+        if cfg.MODEL.ROI_MASK_HEAD.FCF.ENABLED:
+            num_conv_fc = cfg.MODEL.ROI_MASK_HEAD.FCF.NUM_CONV_FC
             for k in range(num_conv_fc):
                 conv_fc = Conv2d(
                     conv_dims,
