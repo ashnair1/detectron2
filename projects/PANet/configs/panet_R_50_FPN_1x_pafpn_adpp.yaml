@@ -15,3 +15,6 @@ MODEL:
     POOLER_RESOLUTION: 28
     FCF:
       ENABLED: False
+TEST:
+  EVAL_PERIOD: 5000
+OUTPUT_DIR: "projects/PANet/output"

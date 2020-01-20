@@ -9,3 +9,6 @@ MODEL:
   ROI_MASK_HEAD:
     FCF:
       ENABLED: False
+TEST:
+  EVAL_PERIOD: 5000
+OUTPUT_DIR: "projects/PANet/output"
