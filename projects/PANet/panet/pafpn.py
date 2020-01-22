@@ -19,7 +19,7 @@ class PAFPN(Backbone):
     """
 
     def __init__(
-            self, bottom_up, in_features, out_channels, norm="", top_block=None, fuse_type="sum"
+        self, bottom_up, in_features, out_channels, norm="", top_block=None, fuse_type="sum"
     ):
         """
         Args:
@@ -156,11 +156,11 @@ class PAFPN(Backbone):
     def forward(self, x):
         """
         Args:
-            input (dict[str: Tensor]): mapping feature map name (e.g., "res5") to
+            input (dict[str->Tensor]): mapping feature map name (e.g., "res5") to
                 feature map tensor for each feature level in high to low resolution order.
 
         Returns:
-            dict[str: Tensor]:
+            dict[str->Tensor]:
                 mapping from feature map name to FPN feature map tensor
                 in high to low resolution order. Returned feature names follow the FPN
                 paper convention: "p<stage>", where stage has stride = 2 ** stage e.g.,
@@ -174,7 +174,7 @@ class PAFPN(Backbone):
         prev_features = self.lateral_convs[0](x[0])
         prev_cache.append(self.midout_convs[0](prev_features))
         for features, lateral_conv, midout_conv in zip(
-                x[1:], self.lateral_convs[1:], self.midout_convs[1:]
+            x[1:], self.lateral_convs[1:], self.midout_convs[1:]
         ):
             top_down_features = F.interpolate(prev_features, scale_factor=2, mode="nearest")
             lateral_features = lateral_conv(features)
@@ -203,7 +203,7 @@ class PAFPN(Backbone):
             prev_tu_features = nn.functional.relu(c2(prev_tu_features))
             if self._fuse_type == "avg":
                 prev_features /= 2
-            results.insert(0, output_conv(prev_tu_features))  # Step might be unnecessary
+            results.append(output_conv(prev_tu_features))
 
         if self.top_block is not None:
             top_block_in_feature = bottom_up_features.get(self.top_block.in_feature, None)
