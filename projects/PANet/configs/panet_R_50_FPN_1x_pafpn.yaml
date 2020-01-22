@@ -6,6 +6,8 @@ MODEL:
   MASK_ON: True
   RESNETS:
     DEPTH: 50
+  FPN:
+    NORM: "GN"
   ROI_MASK_HEAD:
     FCF:
       ENABLED: False

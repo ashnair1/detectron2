@@ -6,6 +6,8 @@ MODEL:
   MASK_ON: True
   RESNETS:
     DEPTH: 50
+  FPN:
+    NORM: "GN"
   ROI_HEADS:
     NAME: "PANetROIHeads"
   ROI_BOX_HEAD:
