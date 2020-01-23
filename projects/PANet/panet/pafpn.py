@@ -1,12 +1,11 @@
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-
 import math
+import fvcore.nn.weight_init as weight_init
+import torch.nn.functional as F
+from torch import nn
+
 from detectron2.layers import Conv2d, ShapeSpec, get_norm
 from detectron2.modeling import BACKBONE_REGISTRY, Backbone, ShapeSpec
 from detectron2.modeling.backbone import build_resnet_backbone
-import fvcore.nn.weight_init as weight_init
-from torch import nn
-import torch.nn.functional as F
 
 __all__ = ["build_resnet_pafpn_backbone", "PAFPN"]
 
@@ -118,7 +117,7 @@ class PAFPN(Backbone):
             stage = int(math.log2(in_strides[idx]))
             self.add_module("fpn_lateral{}".format(stage), lateral_conv)
             if idx != 0:
-                self.add_module("fpn_lateral_bup{}".format(stage), lateral_conv2)
+                self.add_module("fpn_bup_lateral{}".format(stage), lateral_conv2)
             self.add_module("fpn_mid_output{}".format(stage), midout_conv)
             self.add_module("fpn_output{}".format(stage), output_conv)
 
