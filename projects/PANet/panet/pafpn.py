@@ -98,6 +98,9 @@ class PAFPN(Backbone):
                 weight_init.c2_xavier_fill(conv_1)
                 weight_init.c2_xavier_fill(conv_2)
 
+                self.add_module("fpn_bup_down1_{}".format(idx), conv_1)
+                self.add_module("fpn_bup_down2_{}".format(idx), conv_2)
+
                 convs1.append(conv_1)
                 convs2.append(conv_2)
 
