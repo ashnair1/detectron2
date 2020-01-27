@@ -346,6 +346,7 @@ class LightBottleneckBlock(ResNetBlockBase):
 def make_stage(block_class, num_blocks, first_stride, **kwargs):
     """
     Create a resnet stage by creating many blocks.
+
     Args:
         block_class (class): a subclass of ResNetBlockBase
         num_blocks (int):
