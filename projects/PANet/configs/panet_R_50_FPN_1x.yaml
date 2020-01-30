@@ -16,5 +16,5 @@ MODEL:
     NAME: "MaskRCNNConvUpsampleHeadAdpp"
     POOLER_RESOLUTION: 28
 TEST:
-  EVAL_PERIOD: 10000
+  EVAL_PERIOD: 5000
 OUTPUT_DIR: "projects/PANet/output"

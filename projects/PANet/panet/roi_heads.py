@@ -226,6 +226,7 @@ class MaskRCNNConvUpsampleHeadAdpp(nn.Module):
                     norm=get_norm(self.norm, conv_dims),
                     activation=F.relu,
                 )
+                weight_init.c2_msra_fill(conv_fc)
                 self.add_module("mask_fcn_fc{}".format(k + 1), conv_fc)
                 self.conv_fc_norm_relus.append(conv_fc)
 
@@ -233,6 +234,12 @@ class MaskRCNNConvUpsampleHeadAdpp(nn.Module):
                 nn.Linear(int(conv_dims/2) * (cfg.MODEL.ROI_MASK_HEAD.POOLER_RESOLUTION ** 2),
                           (2*cfg.MODEL.ROI_MASK_HEAD.POOLER_RESOLUTION) ** 2),
                 nn.ReLU(inplace=True))
+            for m in self.mask_fc.modules():
+                if isinstance(i, nn.Linear):
+                    nn.init.normal_(m.weight)
+                    nn.init.constant_(m.bias, 0.01)
+
+            self.add_module("mask_fc", self.mask_fc)
 
         self.deconv = ConvTranspose2d(
             conv_dims if num_conv > 0 else input_channels,
@@ -279,7 +286,11 @@ class MaskRCNNConvUpsampleHeadAdpp(nn.Module):
         if self.conv_fc_norm_relus:
             for layer in self.conv_fc_norm_relus:
                 xb = layer(xb)
-            xb = self.mask_fc(xb.view(xb.shape[0], -1))
+            # Hack for batch size of zero
+            if xb.shape[0]:
+                xb = self.mask_fc(xb.view(xb.shape[0], -1))
+            else:
+                xb = self.mask_fc(xb.view(xb.shape[0], np.prod(xb.shape[1:])))
             xb = xb.view(xb.shape[0], 1, 2*pooler_resolution, 2*pooler_resolution)
             xb = xb.repeat(1, num_classes, 1, 1)
             x = xb + x
