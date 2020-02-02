@@ -11,7 +11,7 @@ The PANet was an architecture that won 1st place in COCO 2017 Instance Segmentat
 3. **Fusion of features** (FCF) from fully connected and convolutional layers.
 
 <p align="center">
-<img src=".github/panet.png" alt="PANet" width=500>
+<img src="https://user-images.githubusercontent.com/32295036/73606197-6e509180-45c1-11ea-8831-6175e798ac81.jpg" alt="PANet" width=500>
 </p>
 
 **Note**: In the original author's implementation, they have used Group Normalisation in the RoI heads as well. However, this fails in the current implementation (Pytorch 1.4) probably because of Group Norm not accepting empty batches. This has been recently fixed via a recent [pull request](https://github.com/pytorch/pytorch/pull/32401). So you could use to pytorch's nightly build and presumably use Group Norm in the roi heads to get a more accurate implementation.
