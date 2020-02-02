@@ -23,6 +23,7 @@ class PANetROIHeads(StandardROIHeads):
         pooler_scales     = tuple(1.0 / self.feature_strides[k] for k in self.in_features)
         sampling_ratio    = cfg.MODEL.ROI_BOX_HEAD.POOLER_SAMPLING_RATIO
         pooler_type       = cfg.MODEL.ROI_BOX_HEAD.POOLER_TYPE
+        self.train_on_pred_boxes = cfg.MODEL.ROI_BOX_HEAD.TRAIN_ON_PRED_BOXES
         # fmt: on
 
         # If StandardROIHeads is applied on multiple feature maps (as in FPN),
