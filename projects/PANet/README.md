@@ -1,10 +1,40 @@
-## Path Aggregation Network in Detectron2
+# Path Aggregation Network in Detectron2
 
 Shu Liu, Lu Qi, Haifang Qin, Jianping Shi, Jiaya Jia.
 
 [[`arXiv`](https://arxiv.org/pdf/1803.01534)] [[`BibTeX`](#CitingPANet)]
 
-### Train
+The PANet was an architecture that won 1st place in COCO 2017 Instance Segmentation challenge and 2nd place in the COCO 2017 Detection challenge. It did so by introducing the following modifications to Mask RCNN (with FPN backbone):
+
+1. An additional **bottom up branch** (PAFPN) for better localization info via shortening the path to low level features.
+2. **Adaptive feature pooling** (ADPP) for aggregating features across all levels for each proposal. More information = Better performance.
+3. **Fusion of features** (FCF) from fully connected and convolutional layers.
+
+<p align="center">
+<img src=".github/panet.png" alt="PANet" width=500>
+</p>
+
+**Note**: In the original author's implementation, they have used Group Normalisation in the RoI heads as well. However, this fails in the current implementation (Pytorch 1.4) probably because of Group Norm not accepting empty batches. This has been recently fixed via a recent [pull request](https://github.com/pytorch/pytorch/pull/32401). So you could use to pytorch's nightly build and presumably use Group Norm in the roi heads to get a more accurate implementation.
+
+## Ablation Study
+
+Dark Blue: PAFPN </br>
+Light Blue: PAFPN + ADPP </br>
+Pink: PAFPN + ADPP + FCF </br>
+
+BBox AP           |  Mask AP
+:-------------------------:|:-------------------------:
+<img src=".github/bbox_AP.svg" alt="bbox" width=500>  |  <img src=".github/segm_AP.svg" alt="segm" width=500>
+
+## Comparison
+
+| Model     | Backbone | lr sched | AP box | AP mask |
+|-----------|----------|----------|--------|---------|
+| Mask RCNN | R50      | 1x       | 38.6   | 35.2    |
+| PANet     | R50      | 1x       | 40.3   | 36.8    |
+
+## Usage
+### Training
 1. Single GPU
 ```bash
 python projects/PANet/train_net.py \
@@ -23,10 +53,10 @@ python projects/PANet/train_net.py \
         --config-file projects/PANet/configs/panet_R_50_FPN_1x.yaml SOLVER.IMS_PER_BATCH 2 SOLVER.BASE_LR 0.0025
 ```
 
-### Evaluate
+### Evaluation
 ```bash
 python projects/PANet/train_net.py \
-        --eval-only \
+        --eval-only MODEL.WEIGHTS projects/PANet/output/model_final.pth \
         --config-file projects/PANet/configs/panet_R_50_FPN_1x.yaml SOLVER.IMS_PER_BATCH 2 SOLVER.BASE_LR 0.0025
 ```
 
