@@ -60,6 +60,25 @@ python projects/PANet/train_net.py \
         --config-file projects/PANet/configs/panet_R_50_FPN_1x.yaml SOLVER.IMS_PER_BATCH 2 SOLVER.BASE_LR 0.0025
 ```
 
+### Inference
+1. Batch inference
+```bash
+python demo/demo_batch.py \
+        --config-file configs/panet_R_50_FPN_1x.yaml \
+        --weights output/pafpn_gn_adpp_fcf/model_final.pth \
+        --input_dir demo/test_images \
+        --output demo/test_results
+```
+2. Standard demo (single image)
+```bash
+python demo/demo.py \
+        --config-file configs/panet_R_50_FPN_1x.yaml \
+        --input demo/test_images/input.jpg \
+        --output demo/test_results \
+        --opts MODEL.WEIGHTS output/pafpn_gn_adpp_fcf/model_final.pth
+```
+
+
 
 ## <a name="CitingPANet"></a>Citing PANet
 
