@@ -37,25 +37,25 @@ BBox AP           |  Mask AP
 ### Training
 1. Single GPU
 ```bash
-python projects/PANet/train_net.py \
+python projects/PANet/tools/train_net.py \
         --config-file projects/PANet/configs/panet_R_50_FPN_1x.yaml SOLVER.IMS_PER_BATCH 2 SOLVER.BASE_LR 0.0025
 ```
 
 2. Multi GPU
 ```bash
-python projects/PANet/train_net.py --num-gpus 8 \
+python projects/PANet/tools/train_net.py --num-gpus 8 \
         --config-file projects/PANet/configs/panet_R_50_FPN_1x.yaml
 ```
 3. Resume Training
 ```bash
-python projects/PANet/train_net.py \
+python projects/PANet/tools/train_net.py \
         --resume \
         --config-file projects/PANet/configs/panet_R_50_FPN_1x.yaml SOLVER.IMS_PER_BATCH 2 SOLVER.BASE_LR 0.0025
 ```
 
 ### Evaluation
 ```bash
-python projects/PANet/train_net.py \
+python projects/PANet/tools/train_net.py \
         --eval-only MODEL.WEIGHTS projects/PANet/output/model_final.pth \
         --config-file projects/PANet/configs/panet_R_50_FPN_1x.yaml SOLVER.IMS_PER_BATCH 2 SOLVER.BASE_LR 0.0025
 ```
@@ -65,7 +65,7 @@ python projects/PANet/train_net.py \
 ```bash
 python demo/demo_batch.py \
         --config-file configs/panet_R_50_FPN_1x.yaml \
-        --weights output/pafpn_gn_adpp_fcf/model_final.pth \
+        --weights output/model_final.pth \
         --input_dir demo/test_images \
         --output demo/test_results
 ```
@@ -75,9 +75,17 @@ python demo/demo.py \
         --config-file configs/panet_R_50_FPN_1x.yaml \
         --input demo/test_images/input.jpg \
         --output demo/test_results \
-        --opts MODEL.WEIGHTS output/pafpn_gn_adpp_fcf/model_final.pth
+        --opts MODEL.WEIGHTS output/model_final.pth
 ```
 
+### Export Caffe2 Model
+```bash
+python projects/PANet/tools/caffe2_converter.py \
+        --config-file projects/PANet/configs/panet_R_50_FPN_1x.yaml \
+        --output ./caffe2_model --run-eval \
+        MODEL.WEIGHTS projects/PANet/output/model_final.pth \
+        MODEL.DEVICE cpu
+```
 
 
 ## <a name="CitingPANet"></a>Citing PANet

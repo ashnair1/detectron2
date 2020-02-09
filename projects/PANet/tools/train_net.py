@@ -11,8 +11,12 @@ from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.config import get_cfg
 from detectron2.engine import DefaultTrainer, default_argument_parser, default_setup, launch
 from detectron2.evaluation import COCOEvaluator, verify_results
-from panet import add_panet_config
 
+import sys
+sys.path.append("/home/an1/detectron2/projects/PANet/")
+
+from panet import add_panet_config
+import dataset
 
 class Trainer(DefaultTrainer):
     @classmethod
@@ -20,7 +24,6 @@ class Trainer(DefaultTrainer):
         if output_folder is None:
             output_folder = os.path.join(cfg.OUTPUT_DIR, "inference")
         return COCOEvaluator(dataset_name, cfg, True, output_folder)
-
 
 def setup(args):
     """
