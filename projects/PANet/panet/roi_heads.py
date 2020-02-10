@@ -138,7 +138,7 @@ class FastRCNNConvFCHeadAdpp(nn.Module):
         if len(self.fcs):
             if x.dim() > 2:
                 x = torch.flatten(x, start_dim=1)
-            x1 = list(torch.split(x, x.shape[0] // 4, dim=0))
+            x1 = list(torch.split(x, int(x.shape[0] // 4), dim=0))
             lvls = []
 
             # Pooled feature grids go through 1 parameter layer independently
