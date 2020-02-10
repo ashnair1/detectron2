@@ -1,0 +1,25 @@
+_BASE_: "../Base-RCNN-FPN.yaml"
+MODEL:
+  BACKBONE:
+    NAME: "build_resnet_pafpn_backbone"
+  WEIGHTS: "detectron2://ImageNetPretrained/MSRA/R-50.pkl"
+  MASK_ON: True
+  RESNETS:
+    DEPTH: 50
+  FPN:
+    NORM: "GN"
+  ROI_HEADS:
+    NAME: "PANetROIHeads"
+    NUM_CLASSES: 15
+  ROI_BOX_HEAD:
+    NAME: "FastRCNNConvFCHeadAdpp"
+  ROI_MASK_HEAD:
+    NAME: "MaskRCNNConvUpsampleHeadAdpp"
+    POOLER_RESOLUTION: 28
+DATASETS:
+  TRAIN: ("isaid_train",)
+  TEST: ("isaid_val",)
+TEST:
+  DETECTIONS_PER_IMAGE: 1000
+  EVAL_PERIOD: 5000
+OUTPUT_DIR: "projects/PANet/output"
