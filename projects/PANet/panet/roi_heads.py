@@ -261,7 +261,7 @@ class MaskRCNNConvUpsampleHeadAdpp(nn.Module):
             nn.init.constant_(self.predictor.bias, 0)
 
     def forward(self, x):
-        x1 = list(torch.split(x, x.shape[0] // 4, dim=0))
+        x1 = list(torch.split(x, int(x.shape[0] // 4), dim=0))
         lvls = []
 
         # Pooled feature grids go through 1 parameter layer independently
