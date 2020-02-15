@@ -15,6 +15,7 @@ from .c10 import (
     Caffe2KeypointRCNNInference,
     Caffe2MaskRCNNInference,
     Caffe2ROIPooler,
+    Caffe2AdaptiveROIPooler,
     Caffe2RPN,
 )
 
@@ -70,8 +71,8 @@ def patch(model, target, updater, *args, **kwargs):
 def patch_generalized_rcnn(model):
     ccc = Caffe2CompatibleConverter
     model = patch(model, rpn.RPN, ccc(Caffe2RPN))
-    model = patch(model, poolers.ROIPooler, ccc(Caffe2ROIPooler))
-
+    #model = patch(model, poolers.ROIPooler, ccc(Caffe2ROIPooler))
+    model = patch(model, poolers.ROIPooler, ccc(Caffe2AdaptiveROIPooler))
     return model
 
 

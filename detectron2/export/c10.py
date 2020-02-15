@@ -327,6 +327,70 @@ class Caffe2ROIPooler(Caffe2Compatible, poolers.ROIPooler):
         roi_feat = torch.ops._caffe2.BatchPermutation(roi_feat_shuffled, rois_idx_restore_int32)
         return roi_feat
 
+#####################################
+
+
+class Caffe2AdaptiveROIPooler(Caffe2Compatible, poolers.ROIPooler):
+    @staticmethod
+    def c2_preprocess(box_lists):
+        assert all(isinstance(x, Boxes) for x in box_lists)
+        if all(isinstance(x, Boxes4or5) for x in box_lists):
+            # input is pure-tensor based
+            assert len(box_lists) == 1
+            pooler_fmt_boxes = box_lists[0].tensor
+        else:
+            pooler_fmt_boxes = poolers.convert_boxes_to_pooler_format(box_lists)
+        return pooler_fmt_boxes
+
+    def forward(self, x, box_lists):
+        assert not self.training
+
+        pooler_fmt_boxes = self.c2_preprocess(box_lists)
+        num_level_assignments = len(self.level_poolers)
+
+        if num_level_assignments == 1:
+            out = torch.ops._caffe2.RoIAlign(
+                x[0],
+                pooler_fmt_boxes,
+                order="NCHW",
+                spatial_scale=float(self.level_poolers[0].spatial_scale),
+                pooled_h=int(self.output_size[0]),
+                pooled_w=int(self.output_size[1]),
+                sampling_ratio=int(self.level_poolers[0].sampling_ratio),
+                aligned=bool(self.level_poolers[0].aligned),
+            )
+            return out
+
+        device = pooler_fmt_boxes.device
+        fpn_outputs = [pooler_fmt_boxes]
+        fpn_outputs = [to_device(x, device) for x in fpn_outputs]
+
+        rois_fpn_list = fpn_outputs
+        rois_idx_restore_int32 = torch.IntTensor(list(range(4*len(pooler_fmt_boxes))))
+
+        roi_fpn = rois_fpn_list[0]
+
+        roi_feat_fpn_list = []
+        for x_level, pooler in zip(x, self.level_poolers):
+            roi_feat_fpn = torch.ops._caffe2.RoIAlign(
+                x_level,
+                roi_fpn,
+                order="NCHW",
+                spatial_scale=float(pooler.spatial_scale),
+                pooled_h=int(self.output_size[0]),
+                pooled_w=int(self.output_size[1]),
+                sampling_ratio=int(pooler.sampling_ratio),
+                aligned=bool(pooler.aligned),
+            )
+            roi_feat_fpn_list.append(roi_feat_fpn)
+
+        roi_feat_shuffled = cat(roi_feat_fpn_list, dim=0)
+        # import pdb
+        # pdb.set_trace()
+        roi_feat = torch.ops._caffe2.BatchPermutation(roi_feat_shuffled, rois_idx_restore_int32)
+        return roi_feat
+#####################################
+
 
 class Caffe2FastRCNNOutputsInference:
     def __init__(self, tensor_mode):
