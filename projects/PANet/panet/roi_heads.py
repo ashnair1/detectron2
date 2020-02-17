@@ -7,6 +7,7 @@ from torch.nn import functional as F
 from detectron2.layers import Conv2d, ConvTranspose2d, ShapeSpec, get_norm
 from detectron2.modeling import ROI_HEADS_REGISTRY, StandardROIHeads
 from detectron2.modeling.roi_heads.fast_rcnn import FastRCNNOutputLayers
+from detectron2.modeling.roi_heads.mask_head import BaseMaskRCNNHead
 from detectron2.utils.registry import Registry
 
 from .adaptive_pooler import AdaptiveROIPooler
@@ -168,7 +169,7 @@ def build_box_head(cfg, input_shape):
 
 
 @ROI_MASK_HEAD_REGISTRY.register()
-class MaskRCNNConvUpsampleHeadAdpp(nn.Module):
+class MaskRCNNConvUpsampleHeadAdpp(BaseMaskRCNNHead):
     """
     A mask head with several conv layers, plus an upsample layer (with `ConvTranspose2d`).
     """
@@ -180,7 +181,7 @@ class MaskRCNNConvUpsampleHeadAdpp(nn.Module):
             conv_dim: the dimension of the conv layers
             norm: normalization for the conv layers
         """
-        super(MaskRCNNConvUpsampleHeadAdpp, self).__init__()
+        super().__init__(cfg, input_shape)
 
         # fmt: off
         num_classes       = cfg.MODEL.ROI_HEADS.NUM_CLASSES
@@ -260,7 +261,7 @@ class MaskRCNNConvUpsampleHeadAdpp(nn.Module):
         if self.predictor.bias is not None:
             nn.init.constant_(self.predictor.bias, 0)
 
-    def forward(self, x):
+    def layers(self, x):
         x1 = list(torch.split(x, int(x.shape[0] // 4), dim=0))
         lvls = []
 
