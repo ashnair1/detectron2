@@ -1,12 +1,12 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 import logging
 import numpy as np
-from typing import Dict
+from typing import Dict, List, Optional, Tuple, Union
 import torch
 from torch import nn
 
 from detectron2.layers import ShapeSpec
-from detectron2.structures import Boxes, Instances, pairwise_iou
+from detectron2.structures import Boxes, ImageList, Instances, pairwise_iou
 from detectron2.utils.events import get_event_storage
 from detectron2.utils.registry import Registry
 
@@ -19,7 +19,7 @@ from ..sampling import subsample_labels
 from .box_head import build_box_head
 from .fast_rcnn import FastRCNNOutputLayers, FastRCNNOutputs
 from .keypoint_head import build_keypoint_head, keypoint_rcnn_inference, keypoint_rcnn_loss
-from .mask_head import build_mask_head, mask_rcnn_inference, mask_rcnn_loss
+from .mask_head import build_mask_head
 
 ROI_HEADS_REGISTRY = Registry("ROI_HEADS")
 ROI_HEADS_REGISTRY.__doc__ = """
@@ -42,7 +42,9 @@ def build_roi_heads(cfg, input_shape):
     return ROI_HEADS_REGISTRY.get(name)(cfg, input_shape)
 
 
-def select_foreground_proposals(proposals, bg_label):
+def select_foreground_proposals(
+    proposals: List[Instances], bg_label: int
+) -> Tuple[List[Instances], List[torch.Tensor]]:
     """
     Given a list of N Instances (for N images), each containing a `gt_classes` field,
     return a list of Instances that contain only instances with `gt_classes != -1 &&
@@ -72,7 +74,7 @@ def select_foreground_proposals(proposals, bg_label):
     return fg_proposals, fg_selection_masks
 
 
-def select_proposals_with_visible_keypoints(proposals):
+def select_proposals_with_visible_keypoints(proposals: List[Instances]) -> List[Instances]:
     """
     Args:
         proposals (list[Instances]): a list of N Instances, where N is the
@@ -155,7 +157,9 @@ class ROIHeads(torch.nn.Module):
         # Box2BoxTransform for bounding box regression
         self.box2box_transform = Box2BoxTransform(weights=cfg.MODEL.ROI_BOX_HEAD.BBOX_REG_WEIGHTS)
 
-    def _sample_proposals(self, matched_idxs, matched_labels, gt_classes):
+    def _sample_proposals(
+        self, matched_idxs: torch.Tensor, matched_labels: torch.Tensor, gt_classes: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Based on the matching between N proposals and M groundtruth,
         sample the proposals and set their classification labels.
@@ -192,7 +196,9 @@ class ROIHeads(torch.nn.Module):
         return sampled_idxs, gt_classes[sampled_idxs]
 
     @torch.no_grad()
-    def label_and_sample_proposals(self, proposals, targets):
+    def label_and_sample_proposals(
+        self, proposals: List[Instances], targets: List[Instances]
+    ) -> List[Instances]:
         """
         Prepare some proposals to be used to train the ROI heads.
         It performs box matching between `proposals` and `targets`, and assigns
@@ -277,7 +283,13 @@ class ROIHeads(torch.nn.Module):
 
         return proposals_with_gt
 
-    def forward(self, images, features, proposals, targets=None):
+    def forward(
+        self,
+        images: ImageList,
+        features: Dict[str, torch.Tensor],
+        proposals: List[Instances],
+        targets: Optional[List[Instances]] = None,
+    ) -> Tuple[List[Instances], Dict[str, torch.Tensor]]:
         """
         Args:
             images (ImageList):
@@ -385,6 +397,7 @@ class Res5ROIHeads(ROIHeads):
         del images
 
         if self.training:
+            assert targets
             proposals = self.label_and_sample_proposals(proposals, targets)
         del targets
 
@@ -417,8 +430,7 @@ class Res5ROIHeads(ROIHeads):
                 # features.
                 mask_features = box_features[torch.cat(fg_selection_masks, dim=0)]
                 del box_features
-                mask_logits = self.mask_head(mask_features)
-                losses["loss_mask"] = mask_rcnn_loss(mask_logits, proposals)
+                losses.update(self.mask_head(mask_features, proposals))
             return [], losses
         else:
             pred_instances, _ = outputs.inference(
@@ -447,9 +459,9 @@ class Res5ROIHeads(ROIHeads):
         if self.mask_on:
             features = [features[f] for f in self.in_features]
             x = self._shared_roi_transform(features, [x.pred_boxes for x in instances])
-            mask_logits = self.mask_head(x)
-            mask_rcnn_inference(mask_logits, instances)
-        return instances
+            return self.mask_head(x, instances)
+        else:
+            return instances
 
 
 @ROI_HEADS_REGISTRY.register()
@@ -551,12 +563,19 @@ class StandardROIHeads(ROIHeads):
             cfg, ShapeSpec(channels=in_channels, width=pooler_resolution, height=pooler_resolution)
         )
 
-    def forward(self, images, features, proposals, targets=None):
+    def forward(
+        self,
+        images: ImageList,
+        features: Dict[str, torch.Tensor],
+        proposals: List[Instances],
+        targets: Optional[List[Instances]] = None,
+    ) -> Tuple[List[Instances], Dict[str, torch.Tensor]]:
         """
         See :class:`ROIHeads.forward`.
         """
         del images
         if self.training:
+            assert targets
             proposals = self.label_and_sample_proposals(proposals, targets)
         del targets
 
@@ -577,7 +596,9 @@ class StandardROIHeads(ROIHeads):
             pred_instances = self.forward_with_given_boxes(features, pred_instances)
             return pred_instances, {}
 
-    def forward_with_given_boxes(self, features, instances):
+    def forward_with_given_boxes(
+        self, features: Dict[str, torch.Tensor], instances: List[Instances]
+    ) -> List[Instances]:
         """
         Use the given boxes in `instances` to produce other (non-box) per-ROI outputs.
 
@@ -591,19 +612,21 @@ class StandardROIHeads(ROIHeads):
                 "pred_boxes" and "pred_classes" to exist.
 
         Returns:
-            instances (Instances):
-                the same `Instances` object, with extra
+            instances (list[Instances]):
+                the same `Instances` objects, with extra
                 fields such as `pred_masks` or `pred_keypoints`.
         """
         assert not self.training
         assert instances[0].has("pred_boxes") and instances[0].has("pred_classes")
-        features = [features[f] for f in self.in_features]
+        features_list = [features[f] for f in self.in_features]
 
-        instances = self._forward_mask(features, instances)
-        instances = self._forward_keypoint(features, instances)
+        instances = self._forward_mask(features_list, instances)
+        instances = self._forward_keypoint(features_list, instances)
         return instances
 
-    def _forward_box(self, features, proposals):
+    def _forward_box(
+        self, features: List[torch.Tensor], proposals: List[Instances]
+    ) -> Union[Dict[str, torch.Tensor], List[Instances]]:
         """
         Forward logic of the box prediction branch. If `self.train_on_pred_boxes is True`,
             the function puts predicted boxes in the `proposal_boxes` field of `proposals` argument.
@@ -644,7 +667,9 @@ class StandardROIHeads(ROIHeads):
             )
             return pred_instances
 
-    def _forward_mask(self, features, instances):
+    def _forward_mask(
+        self, features: List[torch.Tensor], instances: List[Instances]
+    ) -> Union[Dict[str, torch.Tensor], List[Instances]]:
         """
         Forward logic of the mask prediction branch.
 
@@ -666,16 +691,15 @@ class StandardROIHeads(ROIHeads):
             proposals, _ = select_foreground_proposals(instances, self.num_classes)
             proposal_boxes = [x.proposal_boxes for x in proposals]
             mask_features = self.mask_pooler(features, proposal_boxes)
-            mask_logits = self.mask_head(mask_features)
-            return {"loss_mask": mask_rcnn_loss(mask_logits, proposals)}
+            return self.mask_head(mask_features, proposals)
         else:
             pred_boxes = [x.pred_boxes for x in instances]
             mask_features = self.mask_pooler(features, pred_boxes)
-            mask_logits = self.mask_head(mask_features)
-            mask_rcnn_inference(mask_logits, instances)
-            return instances
+            return self.mask_head(mask_features, instances)
 
-    def _forward_keypoint(self, features, instances):
+    def _forward_keypoint(
+        self, features: List[torch.Tensor], instances: List[Instances]
+    ) -> Union[Dict[str, torch.Tensor], List[Instances]]:
         """
         Forward logic of the keypoint prediction branch.
 
