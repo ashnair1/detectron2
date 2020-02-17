@@ -1,3 +1,11 @@
-from .custom_dataset import register
+# iSAID Dataset
+from .isaid import register_isaid
+#from .isaid import (
+#    register_isaid,
+#    isaid_mapper
+#)
+register_isaid()
 
-register()
+from .dataset_mapper import DatasetMapper
+
+__all__ = [k for k in globals().keys() if "builtin" not in k and not k.startswith("_")]
