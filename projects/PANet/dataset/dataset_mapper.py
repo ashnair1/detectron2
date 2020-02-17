@@ -12,8 +12,6 @@ import torch
 from fvcore.common.file_io import PathManager
 from PIL import Image
 
-logging.basicConfig(level=logging.DEBUG)
-
 class DatasetMapper(DatasetMapper):
     """
     A callable which takes a dataset dict in Detectron2 Dataset format,
