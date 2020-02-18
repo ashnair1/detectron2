@@ -6,6 +6,10 @@ MODEL:
   MASK_ON: True
   RESNETS:
     DEPTH: 50
+  ANCHOR_GENERATOR:
+    SIZES : [[8, 16, 32, 64, 128]]
+  RPN:
+    POST_NMS_TOPK_TEST: 1500
   FPN:
     NORM: "GN"
   ROI_HEADS:
@@ -22,4 +26,4 @@ DATASETS:
 TEST:
   DETECTIONS_PER_IMAGE: 1000
   EVAL_PERIOD: 5000
-OUTPUT_DIR: "projects/PANet/output"
+OUTPUT_DIR: "projects/PANet/output/isaid_exp_logs"
