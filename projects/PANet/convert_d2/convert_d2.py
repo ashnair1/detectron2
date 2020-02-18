@@ -98,7 +98,7 @@ def convert_weights(d, cfg):
     if has_fpn:
         for lvl in range(2, 6):
             _convert_conv(f"backbone.fpn_lateral{lvl}", f"fpn/lateral_1x1_c{lvl}")
-            if not has_fpn:
+            if not has_pafpn:
                 _convert_conv(f"backbone.fpn_output{lvl}", f"fpn/posthoc_3x3_p{lvl}")
 
     if has_pafpn:
@@ -109,8 +109,8 @@ def convert_weights(d, cfg):
                 _convert_conv(f"backbone.fpn_bup_lateral{lvl}", f"fpn/lateral_1x1_p{lvl}")
         # Upsampling convs in bottom up path
         for lvl in range(1, 4):
-            _convert_conv(f"backbone.fpn_bup_down1_{lvl}", f"fpn/down1_3x3_n_down1_{lvl}")
-            _convert_conv(f"backbone.fpn_bup_down2_{lvl}", f"fpn/down2_3x3_n_down2_{lvl}")
+            _convert_conv(f"backbone.fpn_bup_down1_{lvl}", f"fpn/downsample1_lat{lvl}")
+            _convert_conv(f"backbone.fpn_bup_down2_{lvl}", f"fpn/downsample2_lat{lvl}")
 
     # RPN:
     _convert_conv("proposal_generator.rpn_head.conv", "rpn/conv0")
