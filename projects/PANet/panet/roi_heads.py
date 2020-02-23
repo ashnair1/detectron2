@@ -18,10 +18,10 @@ ROI_MASK_HEAD_REGISTRY = Registry("ROI_MASK_HEAD")
 
 @ROI_HEADS_REGISTRY.register()
 class PANetROIHeads(StandardROIHeads):
-    def _init_box_head(self, cfg):
+    def _init_box_head(self, cfg, input_shape):
         # fmt: off
         pooler_resolution = cfg.MODEL.ROI_BOX_HEAD.POOLER_RESOLUTION
-        pooler_scales     = tuple(1.0 / self.feature_strides[k] for k in self.in_features)
+        pooler_scales     = tuple(1.0 / input_shape[k].stride for k in self.in_features)
         sampling_ratio    = cfg.MODEL.ROI_BOX_HEAD.POOLER_SAMPLING_RATIO
         pooler_type       = cfg.MODEL.ROI_BOX_HEAD.POOLER_TYPE
         self.train_on_pred_boxes = cfg.MODEL.ROI_BOX_HEAD.TRAIN_ON_PRED_BOXES
@@ -29,7 +29,7 @@ class PANetROIHeads(StandardROIHeads):
 
         # If StandardROIHeads is applied on multiple feature maps (as in FPN),
         # then we share the same predictors and therefore the channel counts must be the same
-        in_channels = [self.feature_channels[f] for f in self.in_features]
+        in_channels = [input_shape[f].channels for f in self.in_features]
         # Check all channel counts are equal
         assert len(set(in_channels)) == 1, in_channels
         in_channels = in_channels[0]
@@ -50,18 +50,18 @@ class PANetROIHeads(StandardROIHeads):
             self.box_head.output_size, self.num_classes, self.cls_agnostic_bbox_reg
         )
 
-    def _init_mask_head(self, cfg):
+    def _init_mask_head(self, cfg, input_shape):
         # fmt: off
         self.mask_on           = cfg.MODEL.MASK_ON
         if not self.mask_on:
             return
         pooler_resolution = cfg.MODEL.ROI_MASK_HEAD.POOLER_RESOLUTION
-        pooler_scales     = tuple(1.0 / self.feature_strides[k] for k in self.in_features)
+        pooler_scales     = tuple(1.0 / input_shape[k].stride for k in self.in_features)
         sampling_ratio    = cfg.MODEL.ROI_MASK_HEAD.POOLER_SAMPLING_RATIO
         pooler_type       = cfg.MODEL.ROI_MASK_HEAD.POOLER_TYPE
         # fmt: on
 
-        in_channels = [self.feature_channels[f] for f in self.in_features][0]
+        in_channels = [input_shape[f].channels for f in self.in_features][0]
 
         self.mask_pooler = AdaptiveROIPooler(
             output_size=pooler_resolution,
