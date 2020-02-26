@@ -12,6 +12,7 @@ MODEL:
     NAME: "RRPN"
   ANCHOR_GENERATOR:
     ANGLES: [[0, 30, 60, 90]]
+    SIZES : [[8, 16, 32, 64]]
   RPN:
     BBOX_REG_WEIGHTS: (1.0, 1.0, 1.0, 1.0, 1.0)
   ROI_HEADS:
@@ -19,6 +20,10 @@ MODEL:
   ROI_BOX_HEAD:
     POOLER_TYPE: "ROIAlignRotated"
     BBOX_REG_WEIGHTS: (10.0, 10.0, 5.0, 5.0, 10.0)
+DATASETS:
+  TRAIN: ("dota1.5_train",)
+  TEST: ("dota1.5_val",)
 TEST:
+  DETECTIONS_PER_IMAGE: 1000
   EVAL_PERIOD: 10000
 OUTPUT_DIR: "projects/PANet/output"
