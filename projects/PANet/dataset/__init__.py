@@ -6,8 +6,9 @@ from .dota import register_dota
 #    isaid_mapper
 #)
 register_isaid()
-
+register_dota()
 
 from .dataset_mapper import DatasetMapper
+from .dota_mapper import DotaMapper
 
 __all__ = [k for k in globals().keys() if "builtin" not in k and not k.startswith("_")]
