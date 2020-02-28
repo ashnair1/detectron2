@@ -10,8 +10,8 @@ from detectron2.utils.visualizer import Visualizer
 import sys
 sys.path.append("/home/an1/detectron2/projects/PANet/")
 
-import dataset
 from dataset import DatasetMapper, DotaMapper
+
 
 def output(vis, fname, show):
     if show:
@@ -30,12 +30,12 @@ if __name__ == "__main__":
     cfg = get_cfg()
     cfg.merge_from_file("/home/an1/detectron2/projects/PANet/configs/dota_obb/faster_rcnn_R_50_FPN_1x_rotated.yaml")
     cfg.freeze()
-    train_data_loader = build_detection_test_loader(cfg, cfg.DATASETS.TEST[0], mapper=DotaMapper(cfg, False))
+    data_loader = build_detection_test_loader(cfg, cfg.DATASETS.TEST[0], mapper=DotaMapper(cfg, False))
     metadata = MetadataCatalog.get(cfg.DATASETS.TRAIN[0])
 
     end_flag = 0
 
-    for batch in train_data_loader:
+    for batch in data_loader:
         if not end_flag:
             for per_image in batch:
                 # Pytorch tensor is in (C, H, W) format
@@ -49,4 +49,3 @@ if __name__ == "__main__":
                 assert "annotations" in list(per_image.keys())
                 vis = visualizer.draw_dataset_dict(per_image)
                 output(vis, str(per_image["image_id"]) + ".jpg", False)
-                

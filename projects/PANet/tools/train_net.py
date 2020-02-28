@@ -17,7 +17,8 @@ import sys
 sys.path.append("/home/an1/detectron2/projects/PANet/")
 
 from panet import add_panet_config
-from dataset import DatasetMapper
+from dataset import DatasetMapper, DotaMapper
+
 
 class Trainer(DefaultTrainer):
     @classmethod
@@ -25,13 +26,15 @@ class Trainer(DefaultTrainer):
         if output_folder is None:
             output_folder = os.path.join(cfg.OUTPUT_DIR, "inference")
         return COCOEvaluator(dataset_name, cfg, True, output_folder)
+
     @classmethod
     def build_test_loader(cls, cfg, dataset_name):
-        return build_detection_test_loader(cfg, dataset_name, mapper=DatasetMapper(cfg, False))
+        return build_detection_test_loader(cfg, dataset_name, mapper=DotaMapper(cfg, False))
 
     @classmethod
     def build_train_loader(cls, cfg):
-        return build_detection_train_loader(cfg, mapper=DatasetMapper(cfg, True))
+        return build_detection_train_loader(cfg, mapper=DotaMapper(cfg, True))
+
 
 def setup(args):
     """

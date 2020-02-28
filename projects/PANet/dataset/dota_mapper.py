@@ -1,7 +1,4 @@
 from detectron2.data import DatasetMapper
-from detectron2.data.datasets import register_coco_instances
-from detectron2.data.datasets.coco import load_coco_json # How we get dataset_dicts
-
 from detectron2.data import transforms as T
 from detectron2.data import detection_utils as utils
 
@@ -9,8 +6,7 @@ import copy
 import logging
 import numpy as np
 import torch
-from fvcore.common.file_io import PathManager
-from PIL import Image
+
 
 class DotaMapper(DatasetMapper):
     """
@@ -40,10 +36,11 @@ class DotaMapper(DatasetMapper):
         image = utils.read_image(dataset_dict["file_name"], format="BGR")
         
         # Custom augs to be used while training
-        augs = [T.RandomFlip(0.6, horizontal=False, vertical=True)]
+        # Only HFlip and Resize are supported for rotated_boxes
+        #augs = [T.RandomFlip(0.4, horizontal=True, vertical=False)]
 
         if self.is_train:
-            tfm_gens = self.tfm_gens + augs
+            tfm_gens = self.tfm_gens #+ augs
         else:
             tfm_gens = self.tfm_gens
 
@@ -54,11 +51,9 @@ class DotaMapper(DatasetMapper):
         image, transforms = T.apply_transform_gens(tfm_gens, image)
         dataset_dict["image"] = torch.as_tensor(image.transpose(2, 0, 1).astype("float32"))
 
-        # annos = [
-        #     utils.transform_instance_annotations(obj, transforms, image.shape[:2])
-        #     for obj in dataset_dict.pop("annotations")
-        #     if obj.get("iscrowd", 0) == 0
-        # ]
+        for a in dataset_dict['annotations']:
+            a['bbox'] = transforms.apply_rotated_box(np.asarray([a['bbox']]))[0].tolist()
+
         annos = dataset_dict['annotations']
         instances = utils.annotations_to_instances_rotated(annos, image.shape[:2])
         dataset_dict["instances"] = utils.filter_empty_instances(instances)
