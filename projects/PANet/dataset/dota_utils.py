@@ -57,10 +57,12 @@ def get_dota_annotation(label):
                 h = d01
                 w = d03
 
-            angle = math.degrees(angle) * -1
+            angle = math.degrees(angle) * -1 # Angle: CW -> CCW
             anndict = {'bbox': [xc, yc, w, h, angle], 'bbox_mode': BoxMode.XYWHA_ABS, 'category_id': catmap[p[-2]]}
             anns.append(anndict)
         return anns
+    else:
+        return []
 
 
 def d2_compatible_dota(root_dir):
