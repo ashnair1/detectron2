@@ -9,7 +9,7 @@ import os
 import detectron2.utils.comm as comm
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.config import get_cfg
-from detectron2.data import build_detection_test_loader, build_detection_train_loader
+from detectron2.data import build_detection_test_loader, build_detection_train_loader, DatasetMapper
 from detectron2.engine import DefaultTrainer, default_argument_parser, default_setup, launch
 from detectron2.evaluation import COCOEvaluator, verify_results
 
@@ -17,7 +17,7 @@ import sys
 sys.path.append("/home/an1/detectron2/projects/PANet/")
 
 from panet import add_panet_config
-from dataset import DatasetMapper, DotaMapper
+from dataset import data_dict
 
 
 class Trainer(DefaultTrainer):
@@ -25,15 +25,21 @@ class Trainer(DefaultTrainer):
     def build_evaluator(cls, cfg, dataset_name, output_folder=None):
         if output_folder is None:
             output_folder = os.path.join(cfg.OUTPUT_DIR, "inference")
-        return COCOEvaluator(dataset_name, cfg, True, output_folder)
+        data = data_dict[cfg.DATASETS.TEST[0].split('_')[0]]
+        data_evaluator = data['evaluator'] if 'evaluator' in list(data.keys()) else COCOEvaluator
+        return data_evaluator(dataset_name, cfg, True, output_folder)
 
     @classmethod
     def build_test_loader(cls, cfg, dataset_name):
-        return build_detection_test_loader(cfg, dataset_name, mapper=DotaMapper(cfg, False))
+        data = data_dict[cfg.DATASETS.TEST[0].split('_')[0]]
+        data_mapper = data['mapper'] if 'mapper' in list(data.keys()) else DatasetMapper
+        return build_detection_test_loader(cfg, dataset_name, mapper=data_mapper(cfg, False))
 
     @classmethod
     def build_train_loader(cls, cfg):
-        return build_detection_train_loader(cfg, mapper=DotaMapper(cfg, True))
+        data = data_dict[cfg.DATASETS.TRAIN[0].split('_')[0]]
+        data_mapper = data['mapper'] if 'mapper' in list(data.keys()) else DatasetMapper
+        return build_detection_train_loader(cfg, mapper=data_mapper(cfg, True))
 
 
 def setup(args):

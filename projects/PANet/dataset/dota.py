@@ -24,6 +24,7 @@ def register_dota():
     for d in ["train", "val"]:
         DatasetCatalog.register("dota1.5_" + d, lambda d=d: get_dota_dicts(data_dir + d, d))
         MetadataCatalog.get("dota1.5_" + d).thing_classes = categories
+        MetadataCatalog.get("dota1.5_" + d).json_file = data_dir + d + os.sep + "dota_{}.json".format(d)
 
 
 if __name__ == "__main__":
