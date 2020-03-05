@@ -8,7 +8,7 @@ import numpy as np
 import torch
 
 
-class DotaMapper(DatasetMapper):
+class DOTAMapper(DatasetMapper):
     """
     A callable which takes a dataset dict in Detectron2 Dataset format,
     and map it into a format used by the model.

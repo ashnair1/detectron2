@@ -1,18 +1,17 @@
-from .isaid import register_isaid
+# DOTA
 from .dota import register_dota
-from detectron2.evaluation import RotatedCOCOEvaluator
-#from .isaid import (
-#    register_isaid,
-#    isaid_mapper
-#)
-register_isaid()
-register_dota()
+from .dota_mapper import DOTAMapper
+from .dota_evaluation import DOTAEvaluator
 
-from .dota_mapper import DotaMapper
+# iSAID
+from .isaid import register_isaid
 from .isaid_mapper import ISAIDMapper
 from .isaid_evaluation import ISAIDEvaluator
 
-data_dict = {'dota1.5': {'mapper': DotaMapper, 'evaluator': RotatedCOCOEvaluator},
+register_isaid()
+register_dota()
+
+data_dict = {'dota1.5': {'mapper': DOTAMapper, 'evaluator': DOTAEvaluator},
              'isaid': {'mapper': ISAIDMapper, 'evaluator': ISAIDEvaluator}}
 
 __all__ = [k for k in globals().keys() if "builtin" not in k and not k.startswith("_")]
