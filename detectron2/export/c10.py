@@ -352,7 +352,7 @@ class Caffe2AdaptiveROIPooler(Caffe2Compatible, poolers.ROIPooler):
     @staticmethod
     def c2_preprocess(box_lists):
         assert all(isinstance(x, Boxes) for x in box_lists)
-        if all(isinstance(x, Boxes4or5) for x in box_lists):
+        if all(isinstance(x, Caffe2Boxes) for x in box_lists):
             # input is pure-tensor based
             assert len(box_lists) == 1
             pooler_fmt_boxes = box_lists[0].tensor
@@ -367,7 +367,14 @@ class Caffe2AdaptiveROIPooler(Caffe2Compatible, poolers.ROIPooler):
         num_level_assignments = len(self.level_poolers)
 
         if num_level_assignments == 1:
-            out = torch.ops._caffe2.RoIAlign(
+            if isinstance(self.level_poolers[0], ROIAlignRotated):
+                c2_roi_align = torch.ops._caffe2.RoIAlignRotated
+                aligned = True
+            else:
+                c2_roi_align = torch.ops._caffe2.RoIAlign
+                aligned = self.level_poolers[0].aligned
+
+            out = c2_roi_align(
                 x[0],
                 pooler_fmt_boxes,
                 order="NCHW",
@@ -375,7 +382,7 @@ class Caffe2AdaptiveROIPooler(Caffe2Compatible, poolers.ROIPooler):
                 pooled_h=int(self.output_size[0]),
                 pooled_w=int(self.output_size[1]),
                 sampling_ratio=int(self.level_poolers[0].sampling_ratio),
-                aligned=bool(self.level_poolers[0].aligned),
+                aligned=aligned,
             )
             return out
 
@@ -390,7 +397,14 @@ class Caffe2AdaptiveROIPooler(Caffe2Compatible, poolers.ROIPooler):
 
         roi_feat_fpn_list = []
         for x_level, pooler in zip(x, self.level_poolers):
-            roi_feat_fpn = torch.ops._caffe2.RoIAlign(
+            if isinstance(pooler, ROIAlignRotated):
+                c2_roi_align = torch.ops._caffe2.RoIAlignRotated
+                aligned = True
+            else:
+                c2_roi_align = torch.ops._caffe2.RoIAlign
+                aligned = bool(pooler.aligned)
+
+            roi_feat_fpn = c2_roi_align(
                 x_level,
                 roi_fpn,
                 order="NCHW",
@@ -398,7 +412,7 @@ class Caffe2AdaptiveROIPooler(Caffe2Compatible, poolers.ROIPooler):
                 pooled_h=int(self.output_size[0]),
                 pooled_w=int(self.output_size[1]),
                 sampling_ratio=int(pooler.sampling_ratio),
-                aligned=bool(pooler.aligned),
+                aligned=aligned,
             )
             roi_feat_fpn_list.append(roi_feat_fpn)
 
