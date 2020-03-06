@@ -1,16 +1,10 @@
 from detectron2.data import DatasetMapper
-from detectron2.data.datasets import register_coco_instances
-from detectron2.data.datasets.coco import load_coco_json # How we get dataset_dicts
-
 from detectron2.data import transforms as T
 from detectron2.data import detection_utils as utils
 
 import copy
 import logging
-import numpy as np
 import torch
-from fvcore.common.file_io import PathManager
-from PIL import Image
 
 
 def filter_small_instances(instances, min, max):
@@ -42,8 +36,11 @@ def filter_small_instances(instances, min, max):
     if instances.has("gt_masks") and inds.nelement():
         instances.gt_masks.polygons = [v for i, v in enumerate(instances.gt_masks.polygons) if i not in frozenset(inds.flatten().tolist())]
 
-    assert instances.gt_boxes.tensor.shape[0] == instances.gt_classes.shape[0] == len(instances.gt_masks.polygons)
+    assert (instances.gt_boxes.tensor.shape[0] == instances.gt_classes.shape[0] == 0) or (
+                instances.gt_boxes.tensor.shape[0] == instances.gt_classes.shape[0] == len(instances.gt_masks.polygons))
+
     return instances
+
 
 class ISAIDMapper(DatasetMapper):
     """
