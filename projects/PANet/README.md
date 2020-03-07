@@ -78,7 +78,18 @@ python demo/demo.py \
         --opts MODEL.WEIGHTS output/model_final.pth
 ```
 
-### Export Caffe2 Model (WIP)
+### Export Model:
+
+Export detectron2 models to caffe2 or onnx (caffe2 runtime) formats. Note that `run-eval` only works for caffe2 models.
+
+```bash
+python projects/PANet/tools/model_converter.py \
+        --config-file configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml \
+        --export-format onnx \
+        --output projects/PANet/output/conversion/ \
+        MODEL.WEIGHTS detectron2://COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl
+        MODEL.DEVICE cpu
+```
 
 ## <a name="CitingPANet"></a>Citing PANet
 

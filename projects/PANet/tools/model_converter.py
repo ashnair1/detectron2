@@ -64,9 +64,12 @@ if __name__ == "__main__":
         caffe2_model.save_graph(os.path.join(args.output, "model.svg"), inputs=first_batch)
         model = caffe2_model
     else:
+        if args.run_eval:
+            logger.info("Evaluation only supported for caffe2 models")
+            args.run_eval = False
         onnx_model = export_onnx_model(cfg, torch_model, first_batch)
         # save the onnx model
-        onnx.save_graph(onnx_model, os.path.join(args.output, "model.onnx"))
+        onnx.save(onnx_model, os.path.join(args.output, "model.onnx"))
         model = onnx_model
 
     # run evaluation with the converted model
