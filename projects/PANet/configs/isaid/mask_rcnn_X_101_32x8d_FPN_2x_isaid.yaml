@@ -1,4 +1,9 @@
 _BASE_: "../Base-RCNN-FPN.yaml"
+INPUT:
+  MIN_SIZE_TRAIN: (800, 1000, 1200)
+DATALOADER:
+  FILTER_ANNOTATIONS_AREA:
+    MIN_AREA: 100
 MODEL:
   MASK_ON: True
   WEIGHTS: "detectron2://ImageNetPretrained/FAIR/X-101-32x8d.pkl"

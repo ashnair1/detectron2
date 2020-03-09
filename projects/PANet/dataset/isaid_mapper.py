@@ -23,9 +23,6 @@ def filter_small_instances(instances, min, max):
     areas = w * h
     inds = ((areas < min) | (areas > max)).nonzero()
 
-    if inds.nelement():	
-        logging.getLogger(__name__).info("Removing {} instances outside area range".format(inds.nelement()))
-
     mask = ((p[:, 3] - p[:, 1]) * (p[:, 2] - p[:, 0]) >= min) & ((p[:, 3] - p[:, 1]) * (p[:, 2] - p[:, 0]) < max)
     instances.gt_boxes.tensor = instances.gt_boxes.tensor[mask]
     instances.gt_classes      = instances.gt_classes[mask]
