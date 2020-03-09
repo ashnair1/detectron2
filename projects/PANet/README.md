@@ -77,6 +77,10 @@ python demo/demo.py \
         --output demo/test_results \
         --opts MODEL.WEIGHTS output/model_final.pth
 ```
+3. Standard demo with onnx model (single image)
+```bash
+python projects/PANet/demo/onnx_infer.py
+```
 
 ### Export Model:
 

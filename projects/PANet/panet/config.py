@@ -9,7 +9,7 @@ def add_panet_config(cfg):
     # Filter annotations by area
     cfg.DATALOADER.FILTER_ANNOTATIONS_AREA = CN()
     cfg.DATALOADER.FILTER_ANNOTATIONS_AREA.MIN_AREA = 0
-    cfg.DATALOADER.FILTER_ANNOTATIONS_AREA.MAX_AREA = 1e5
+    cfg.DATALOADER.FILTER_ANNOTATIONS_AREA.MAX_AREA = 1e6
 
     # Fully Connected Fusion
     cfg.MODEL.ROI_MASK_HEAD.FCF = CN()
