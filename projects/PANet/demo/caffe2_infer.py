@@ -1,7 +1,7 @@
 import cv2
-import caffe2.python.onnx.backend
+from caffe2.proto import caffe2_pb2
+from caffe2.python import core, workspace
 import numpy as np
-import onnx
 import os
 import matplotlib.pyplot  as plt
 import matplotlib.patches as patches
@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     print("Running inference on {}".format(img_name))
     img = cv2.imread(os.path.join(imgdir, img_name))
-    img = cv2.resize(img, (224,224))
+    img = cv2.resize(img, (224, 224))
 
     # Display the image
     ax.imshow(np.flip(img, 2), )
@@ -31,15 +31,35 @@ if __name__ == "__main__":
     # Make im_info a 1 x 3 tensor
     im_info = np.reshape(np.array([img.shape[2], img.shape[3], 1]).astype('float32'), (1,-1))
 
-    # Load the ONNX model
-    model = onnx.load('/home/an1/detectron2/projects/PANet/output/conversion/model.onnx')
-    # Run the ONNX model with Caffe2
-    outputs = caffe2.python.onnx.backend.run_model(model, (img, im_info))
+    model_dir = model = '/home/an1/detectron2/projects/PANet/output/conversion'
+    init_net_path = os.path.join(model_dir, 'model_init.pb')
+    predict_net_path = os.path.join(model_dir, 'model.pb')
 
-    boxes = outputs.roi_bbox_nms.tolist()
-    masks = outputs.value
-    scores = outputs._1.tolist()
-    classes = outputs._2.tolist()
+    device_opts = core.DeviceOption(caffe2_pb2.CPU)
+
+    # Read the contents of the input protobufs into local variables
+    init_net = caffe2_pb2.NetDef()
+    with open(init_net_path, 'rb') as f:
+        init_net.ParseFromString(f.read())
+        init_net.device_option.CopyFrom(device_opts)
+
+    predict_net = caffe2_pb2.NetDef()
+    with open(predict_net_path, "rb") as f:
+        predict_net.ParseFromString(f.read())
+        predict_net.device_option.CopyFrom(device_opts)
+
+    # Initialise the predictor from the input protobufs
+    c2w = workspace.Predictor(init_net, predict_net)
+
+    # Run the net and return predictions
+    results = c2w.run({'data': img, "im_info": im_info})
+
+    boxes, scores, cls, masks, _ = results
+
+    boxes = boxes.tolist()
+    scores = scores.tolist()
+    classes = cls.tolist()
+
     count = 0
 
     for box, mask, score, cls in zip(boxes, masks, scores, classes):
