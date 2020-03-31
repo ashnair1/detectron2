@@ -31,14 +31,20 @@ class Trainer(DefaultTrainer):
 
     @classmethod
     def build_test_loader(cls, cfg, dataset_name):
-        data = data_dict[cfg.DATASETS.TEST[0].split('_')[0]]
-        data_mapper = data['mapper'] if 'mapper' in list(data.keys()) else DatasetMapper
+        try:
+            data = data_dict[cfg.DATASETS.TEST[0].split('_')[0]]
+            data_mapper = data['mapper'] if 'mapper' in list(data.keys()) else DatasetMapper
+        except KeyError:
+            data_mapper = DatasetMapper
         return build_detection_test_loader(cfg, dataset_name, mapper=data_mapper(cfg, False))
 
     @classmethod
     def build_train_loader(cls, cfg):
-        data = data_dict[cfg.DATASETS.TRAIN[0].split('_')[0]]
-        data_mapper = data['mapper'] if 'mapper' in list(data.keys()) else DatasetMapper
+        try:
+            data = data_dict[cfg.DATASETS.TRAIN[0].split('_')[0]]
+            data_mapper = data['mapper'] if 'mapper' in list(data.keys()) else DatasetMapper
+        except KeyError:
+            data_mapper = DatasetMapper
         return build_detection_train_loader(cfg, mapper=data_mapper(cfg, True))
 
 
