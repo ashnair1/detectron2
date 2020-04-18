@@ -5,8 +5,6 @@ from enum import IntEnum, unique
 from typing import Iterator, List, Tuple, Union
 import torch
 
-from detectron2.layers import cat
-
 _RawBoxType = Union[List[float], Tuple[float, ...], torch.Tensor, np.ndarray]
 
 
@@ -189,7 +187,7 @@ class Boxes:
         self.tensor[:, 2].clamp_(min=0, max=w)
         self.tensor[:, 3].clamp_(min=0, max=h)
 
-    def nonempty(self, threshold: int = 0) -> torch.Tensor:
+    def nonempty(self, threshold: float = 0.0) -> torch.Tensor:
         """
         Find boxes that are non-empty.
         A box is considered empty, if either of its side is no larger than threshold.
@@ -265,8 +263,8 @@ class Boxes:
         self.tensor[:, 0::2] *= scale_x
         self.tensor[:, 1::2] *= scale_y
 
-    @staticmethod
-    def cat(boxes_list: List["Boxes"]) -> "Boxes":
+    @classmethod
+    def cat(cls, boxes_list: List["Boxes"]) -> "Boxes":
         """
         Concatenates a list of Boxes into a single Boxes
 
@@ -277,10 +275,12 @@ class Boxes:
             Boxes: the concatenated Boxes
         """
         assert isinstance(boxes_list, (list, tuple))
-        assert len(boxes_list) > 0
+        if len(boxes_list) == 0:
+            return cls(torch.empty(0))
         assert all(isinstance(box, Boxes) for box in boxes_list)
 
-        cat_boxes = type(boxes_list[0])(cat([b.tensor for b in boxes_list], dim=0))
+        # use torch.cat (v.s. layers.cat) so the returned boxes never share storage with input
+        cat_boxes = cls(torch.cat([b.tensor for b in boxes_list], dim=0))
         return cat_boxes
 
     @property
