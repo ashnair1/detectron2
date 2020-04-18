@@ -5,7 +5,7 @@ import contextlib
 import copy
 import functools
 import logging
-import mock
+import unittest.mock as mock
 import numpy as np
 import os
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
