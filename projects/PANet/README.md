@@ -65,9 +65,9 @@ python projects/PANet/tools/train_net.py \
 ```bash
 python demo/demo_batch.py \
         --config-file configs/coco/panet_R_50_FPN_1x.yaml \
-        --weights output/model_final.pth \
         --input_dir demo/test_images \
         --output demo/test_results
+        --opts MODEL.WEIGHTS output/coco/resnet50/model_final.pth
 ```
 2. Standard demo (single image)
 ```bash
@@ -91,7 +91,7 @@ python projects/PANet/tools/model_converter.py \
         --config-file configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml \
         --export-format onnx \
         --output projects/PANet/output/conversion/ \
-        MODEL.WEIGHTS detectron2://COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl
+        MODEL.WEIGHTS detectron2://COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl \
         MODEL.DEVICE cpu
 ```
 
