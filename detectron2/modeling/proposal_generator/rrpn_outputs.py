@@ -5,6 +5,7 @@ import torch
 
 from detectron2.layers import batched_nms_rotated, cat
 from detectron2.structures import Instances, RotatedBoxes, pairwise_iou_rotated
+from detectron2.utils.memory import retry_if_cuda_oom
 
 from .rpn_outputs import RPNOutputs
 
@@ -219,8 +220,12 @@ class RRPNOutputs(RPNOutputs):
             anchors_i: anchors for i-th image
             gt_boxes_i: ground-truth boxes for i-th image
             """
-            match_quality_matrix = pairwise_iou_rotated(gt_boxes_i, anchors_i)
-            matched_idxs, gt_objectness_logits_i = self.anchor_matcher(match_quality_matrix)
+            match_quality_matrix = retry_if_cuda_oom(pairwise_iou_rotated)(gt_boxes_i, anchors_i)
+            matched_idxs, gt_objectness_logits_i = retry_if_cuda_oom(self.anchor_matcher)(match_quality_matrix)
+
+            # Matching is memory-expensive and may result in CPU tensors. But the result is small
+            gt_objectness_logits_i = gt_objectness_logits_i.to(device=gt_boxes_i.device)
+            del match_quality_matrix
 
             if self.boundary_threshold >= 0:
                 # Discard anchors that go out of the boundaries of the image
