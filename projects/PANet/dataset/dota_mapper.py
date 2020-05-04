@@ -37,10 +37,10 @@ class DOTAMapper(DatasetMapper):
         
         # Custom augs to be used while training
         # Only HFlip and Resize are supported for rotated_boxes
-        #augs = [T.RandomFlip(0.4, horizontal=True, vertical=False)]
+        augs = [T.RandomFlip(0.4, horizontal=True, vertical=False)] #[T.RandomRotation([0,90])]
 
         if self.is_train:
-            tfm_gens = self.tfm_gens #+ augs
+            tfm_gens = self.tfm_gens + augs
         else:
             tfm_gens = self.tfm_gens
 

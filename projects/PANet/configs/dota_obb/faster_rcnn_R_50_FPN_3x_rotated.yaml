@@ -1,7 +1,6 @@
 _BASE_: "../Base-RCNN-FPN.yaml"
 MODEL:
   WEIGHTS: "detectron2://ImageNetPretrained/MSRA/R-50.pkl"
-  MASK_ON: False
   RESNETS:
     DEPTH: 50
   PROPOSAL_GENERATOR:
@@ -22,12 +21,14 @@ DATASETS:
   TRAIN: ("dota1.5_train",)
   TEST: ("dota1.5_val",)
 SOLVER:
-  BASE_LR: 0.003
-  CHECKPOINT_PERIOD: 18000
+  BASE_LR: 0.01
+  CHECKPOINT_PERIOD: 27000
+  STEPS: (210000, 250000)
+  MAX_ITER: 270000
 TEST:
   AUG:
     ENABLED: True
-    MIN_SIZES: (800, 1000, 1200)
+    MIN_SIZES: (800, 1000)
   DETECTIONS_PER_IMAGE: 1000
-  EVAL_PERIOD: 18000
+  EVAL_PERIOD: 27000
 OUTPUT_DIR: "projects/PANet/output/dota1.5/frcnnR50_rotated"

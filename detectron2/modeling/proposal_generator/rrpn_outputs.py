@@ -217,7 +217,7 @@ class RRPNOutputs(RPNOutputs):
             image_size_i: (h, w) for the i-th image
             gt_boxes_i: ground-truth boxes for i-th image
             """
-            match_quality_matrix = retry_if_cuda_oom(pairwise_iou_rotated)(gt_boxes_i, anchors_i)
+            match_quality_matrix = retry_if_cuda_oom(pairwise_iou_rotated)(gt_boxes_i, anchors)
             matched_idxs, gt_objectness_logits_i = retry_if_cuda_oom(self.anchor_matcher)(match_quality_matrix)
 
             # Matching is memory-expensive and may result in CPU tensors. But the result is small
