@@ -11,6 +11,7 @@ from .roi_heads import (
     select_foreground_proposals,
 )
 from .rotated_fast_rcnn import RROIHeads
+from .crrcnn import CascadeRROIHeads
 from .fast_rcnn import FastRCNNOutputLayers
 
 from . import cascade_rcnn  # isort:skip
