@@ -174,7 +174,7 @@ setup(
     python_requires=">=3.6",
     install_requires=[
         "termcolor>=1.1",
-        "Pillow",  # you can also use pillow-simd for better performance
+        "Pillow>=7.0",  # or use pillow-simd for better performance
         "yacs>=0.1.6",
         "tabulate",
         "cloudpickle",
@@ -183,13 +183,14 @@ setup(
         "tqdm>4.29.0",
         "tensorboard",
         "fvcore>=0.1.1",
+        "pycocotools>=2.0.1",
         "future",  # used by caffe2
         "pydot",  # used to save caffe2 SVGs
     ],
     extras_require={
         "all": ["shapely", "psutil"],
         "dev": [
-            "flake8==3.7.9",
+            "flake8==3.8.1",
             "isort",
             "black @ git+https://github.com/psf/black@673327449f86fce558adde153bb6cbe54bfebad2",
             "flake8-bugbear",
