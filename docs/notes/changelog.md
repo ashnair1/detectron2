@@ -13,6 +13,9 @@ See release log at
 
 ### Config Version Change Log
 
+Detectron2's config version has not been changed since open source.
+There is no need for an open source user to worry about this.
+
 * v1: Rename `RPN_HEAD.NAME` to `RPN.HEAD_NAME`.
 * v2: A batch of rename of many configurations before release.
 
@@ -23,4 +26,4 @@ We list a few silent regressions since they may silently produce incorrect resul
 * 04/01/2020 - 05/11/2020: Bad accuracy if `TRAIN_ON_PRED_BOXES` is set to True.
 * 03/30/2020 - 04/01/2020: ResNets are not correctly built.
 * 12/19/2019 - 12/26/2019: Using aspect ratio grouping causes a drop in accuracy.
-* release - 11/9/2019: Test time augmentation does not predict the last category.
+* - 11/9/2019: Test time augmentation does not predict the last category.

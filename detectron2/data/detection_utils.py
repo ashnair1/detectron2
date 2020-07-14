@@ -276,7 +276,7 @@ def transform_instance_annotations(
     # bbox is 1d (per-instance bounding box)
     bbox = BoxMode.convert(annotation["bbox"], annotation["bbox_mode"], BoxMode.XYXY_ABS)
     # clip transformed bbox to image size
-    bbox = transforms.apply_box([bbox])[0].clip(min=0)
+    bbox = transforms.apply_box(np.array([bbox]))[0].clip(min=0)
     annotation["bbox"] = np.minimum(bbox, list(image_size + image_size)[::-1])
     annotation["bbox_mode"] = BoxMode.XYXY_ABS
 
@@ -560,7 +560,7 @@ def check_metadata_consistency(key, dataset_names):
 
 def build_augmentation(cfg, is_train):
     """
-    Create a list of :class:`Augmentation` from config.
+    Create a list of default :class:`Augmentation` from config.
     Now it includes resizing and flipping.
 
     Returns:
@@ -574,17 +574,9 @@ def build_augmentation(cfg, is_train):
         min_size = cfg.INPUT.MIN_SIZE_TEST
         max_size = cfg.INPUT.MAX_SIZE_TEST
         sample_style = "choice"
-    if sample_style == "range":
-        assert len(min_size) == 2, "more than 2 ({}) min_size(s) are provided for ranges".format(
-            len(min_size)
-        )
-
-    logger = logging.getLogger(__name__)
-    augmentation = []
-    augmentation.append(T.ResizeShortestEdge(min_size, max_size, sample_style))
+    augmentation = [T.ResizeShortestEdge(min_size, max_size, sample_style)]
     if is_train:
         augmentation.append(T.RandomFlip())
-        logger.info("Augmentations used in training: " + str(augmentation))
     return augmentation
 
 
