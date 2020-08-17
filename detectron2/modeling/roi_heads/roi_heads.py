@@ -125,6 +125,7 @@ class ROIHeads(torch.nn.Module):
     ROIHeads perform all per-region computation in an R-CNN.
 
     It typically contains logic to
+
     1. (in training only) match proposals with ground truth and sample them
     2. crop the regions and extract per-region features using proposals
     3. make per-region predictions with different heads
@@ -515,7 +516,7 @@ class StandardROIHeads(ROIHeads):
                 None if not using mask head.
             mask_pooler (ROIPooler): pooler to extra region features for mask head
             mask_head (nn.Module): transform features to make mask predictions
-            keypoint_in_features, keypoint_pooler, keypoint_head: similar to ``mask*``.
+            keypoint_in_features, keypoint_pooler, keypoint_head: similar to ``mask_*``.
             train_on_pred_boxes (bool): whether to use proposal boxes or
                 predicted boxes from the box head to train other heads.
         """
