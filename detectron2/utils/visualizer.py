@@ -334,7 +334,7 @@ class Visualizer:
                 color channels. The image is required to be in RGB format since that
                 is a requirement of the Matplotlib library. The image is also expected
                 to be in the range [0, 255].
-            metadata (MetadataCatalog): image metadata.
+            metadata (Metadata): image metadata.
             instance_mode (ColorMode): defines one of the pre-defined style for drawing
                 instances on an image.
         """
@@ -387,6 +387,8 @@ class Visualizer:
         if self._instance_mode == ColorMode.IMAGE_BW:
             self.output.img = self._create_grayscale_image(
                 (predictions.pred_masks.any(dim=0) > 0).numpy()
+                if predictions.has("pred_masks")
+                else None
             )
             alpha = 0.3
 
@@ -644,6 +646,10 @@ class Visualizer:
                     text_pos = (x0, y0)  # if drawing boxes, put text on the box corner.
                     horiz_align = "left"
                 elif masks is not None:
+                    # skip small mask without polygon
+                    if len(masks[i].polygons) == 0:
+                        continue
+
                     x0, y0, x1, y1 = masks[i].bbox()
 
                     # draw text in the center (defined by median) when box is not drawn
