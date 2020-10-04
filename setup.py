@@ -87,6 +87,11 @@ def get_extensions():
         )
 
     sources = [main_source] + sources
+    sources = [
+        s
+        for s in sources
+        if not is_rocm_pytorch or torch_ver < [1, 7] or not s.endswith("hip/vision.cpp")
+    ]
 
     extension = CppExtension
 
@@ -168,6 +173,7 @@ def get_model_zoo_configs() -> List[str]:
 PROJECTS = {
     "detectron2.projects.point_rend": "projects/PointRend/point_rend",
     "detectron2.projects.deeplab": "projects/DeepLab/deeplab",
+    "detectron2.projects.panoptic_deeplab": "projects/Panoptic-DeepLab/panoptic_deeplab",
 }
 
 setup(
@@ -200,7 +206,11 @@ setup(
         "pydot",  # used to save caffe2 SVGs
     ],
     extras_require={
-        "all": ["shapely", "psutil"],
+        "all": [
+            "shapely",
+            "psutil",
+            "panopticapi @ https://github.com/cocodataset/panopticapi/archive/master.zip",
+        ],
         "dev": [
             "flake8==3.8.1",
             "isort==4.3.21",
